@@ -26,5 +26,9 @@ app/api/.env.*.local
 # Docker volumes
 pgadmin_data/
 
+# Caddy local CA cert (generated)
+docker/caddy/caddy-root-ca.crt
+docker/caddy/certs/
+
 # OS
 Thumbs.db

@@ -1,0 +1,11 @@
+# Web frontend (mkcert for local HTTPS)
+sentinel.localhost {
+	tls /etc/caddy/certs/sentinel.localhost+1.pem /etc/caddy/certs/sentinel.localhost+1-key.pem
+	reverse_proxy web:5173
+}
+
+# API backend (FrankenPHP)
+api.sentinel.localhost {
+	tls /etc/caddy/certs/sentinel.localhost+1.pem /etc/caddy/certs/sentinel.localhost+1-key.pem
+	reverse_proxy api:80
+}

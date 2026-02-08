@@ -24,12 +24,12 @@ make logs             # Tail all logs (logs-api, logs-web for individual)
 ```
 
 **URLs (dev)**:
-- Web: http://sentinel.localhost
-- API: http://api.sentinel.localhost
-- API Docs: http://api.sentinel.localhost/api
+- Web: https://sentinel.localhost
+- API: https://api.sentinel.localhost
+- API Docs: https://api.sentinel.localhost/api
 - pgAdmin: http://localhost:5050
 - Mailpit: http://localhost:8025
-- Mercure: http://api.sentinel.localhost/.well-known/mercure
+- Mercure: https://api.sentinel.localhost/.well-known/mercure
 
 ### API Commands (Symfony)
 
@@ -60,6 +60,45 @@ Run a single test from inside the container:
 ```
 docker compose exec web npx vitest run src/path/to/file.test.ts
 ```
+
+### HTTPS / SSL Certificates
+
+The Caddy gateway handles TLS. Configuration differs between local development and production.
+
+#### Local Development (mkcert)
+
+Local HTTPS uses [mkcert](https://github.com/FiloSottile/mkcert) to generate certificates trusted by the system and browsers. The `compose.override.yml` mounts `Caddyfile.dev` (with `tls` directives) and the `certs/` directory.
+
+**First-time setup**:
+```bash
+# Install mkcert CA into system/browser trust stores (one-time)
+mkcert -install
+
+# Generate wildcard certificate for sentinel.localhost
+mkdir -p docker/caddy/certs
+cd docker/caddy/certs
+mkcert sentinel.localhost "*.sentinel.localhost"
+```
+
+This creates `sentinel.localhost+1.pem` and `sentinel.localhost+1-key.pem` in `docker/caddy/certs/`. Certs are gitignored — each developer generates their own.
+
+**Regenerate** (if expired or domain changes): re-run the `mkcert` command above, then `docker compose restart caddy`.
+
+#### Production (automatic Let's Encrypt)
+
+In production, Caddy automatically obtains and renews TLS certificates from Let's Encrypt. No manual certificate management needed.
+
+Set the `DOMAIN` env var in `.env` (or your deployment config):
+```env
+DOMAIN=myapp.com
+```
+
+Caddy will automatically:
+- Obtain certificates for `myapp.com` and `api.myapp.com`
+- Renew them before expiry
+- Redirect HTTP → HTTPS
+
+**Requirements**: ports 80 and 443 must be publicly accessible, and DNS A records for `myapp.com` and `api.myapp.com` must point to the server.
 
 ### Xdebug
 

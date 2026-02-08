@@ -1,13 +1,9 @@
-{
-	auto_https off
-}
-
 # Web frontend
-http://sentinel.localhost {
+{$DOMAIN:sentinel.localhost} {
 	reverse_proxy web:5173
 }
 
 # API backend (FrankenPHP)
-http://api.sentinel.localhost {
+api.{$DOMAIN:sentinel.localhost} {
 	reverse_proxy api:80
 }

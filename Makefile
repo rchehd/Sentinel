@@ -15,8 +15,8 @@ install: ## Install project
 	$(MAKE) api-install
 	$(MAKE) web-install
 	@echo "✅ Installation complete!"
-	@echo "🌐 Web: http://sentinel.localhost"
-	@echo "🔌 API: http://api.sentinel.localhost"
+	@echo "🌐 Web: https://sentinel.localhost"
+	@echo "🔌 API: https://api.sentinel.localhost"
 
 .PHONY: start
 start: ## Start all services
