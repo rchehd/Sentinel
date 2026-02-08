@@ -100,6 +100,16 @@ Caddy will automatically:
 
 **Requirements**: ports 80 and 443 must be publicly accessible, and DNS A records for `myapp.com` and `api.myapp.com` must point to the server.
 
+### PHP Configuration
+
+PHP ini files live in `docker/api/conf.d/` and are copied into the container at build time:
+
+| File | Stage | Purpose |
+|------|-------|---------|
+| `app.ini` | All | Base config: timezone, memory limit, upload limits, OPcache |
+| `app.dev.ini` | Dev only | Error display, OPcache revalidation, Xdebug settings |
+| `app.prod.ini` | Prod only | Errors hidden, OPcache optimized, Symfony preloading |
+
 ### Xdebug
 
 Xdebug is installed only in the `dev` Docker stage (not in production). Configured via `docker/api/conf.d/app.dev.ini` and `compose.override.yml` (`XDEBUG_MODE=debug`).

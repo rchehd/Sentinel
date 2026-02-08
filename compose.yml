@@ -3,7 +3,9 @@ services:
   # Caddy reverse proxy (gateway)
   # ========================================
   caddy:
-    image: caddy:2-alpine
+    build:
+      context: .
+      dockerfile: docker/caddy/Dockerfile
     restart: unless-stopped
     ports:
       - "80:80"
@@ -11,7 +13,6 @@ services:
     environment:
       DOMAIN: ${DOMAIN:-sentinel.localhost}
     volumes:
-      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
@@ -76,16 +77,13 @@ services:
       MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
 
   # ========================================
-  # React Frontend (Vite dev server)
+  # React Frontend
   # ========================================
   web:
-    image: node:20-alpine
-    working_dir: /app
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
     restart: unless-stopped
-    environment:
-      VITE_API_URL: ${VITE_API_URL:-https://api.sentinel.localhost}
-      VITE_WS_URL: ${VITE_WS_URL:-wss://api.sentinel.localhost/.well-known/mercure}
-    command: sh -c "npm install && npm run dev"
 
   # ========================================
   # PostgreSQL
