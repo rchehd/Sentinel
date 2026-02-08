@@ -1,6 +1,6 @@
 {
-    "name": "formbuilder/dev-tools",
-    "description": "Dev tooling for FormBuilder monorepo",
+    "name": "Sentinel/dev-tools",
+    "description": "Dev tooling for Sentinel monorepo",
     "type": "project",
     "authors": [
         {
