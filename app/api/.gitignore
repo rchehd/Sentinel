@@ -11,3 +11,8 @@
 
 # Mercure runtime database
 mercure.db
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
