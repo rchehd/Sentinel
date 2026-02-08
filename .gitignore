@@ -1,0 +1,27 @@
+# Dependencies
+app/api/vendor/
+app/web/node_modules/
+
+# Build artifacts
+app/api/var/
+app/web/dist/
+
+# Environment files (local overrides)
+.env
+.env.local
+.env.*.local
+app/api/.env.local
+app/api/.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Docker volumes
+pgadmin_data/
+
+# OS
+Thumbs.db

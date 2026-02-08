@@ -1,0 +1,101 @@
+services:
+  # ========================================
+  # Caddy reverse proxy (gateway)
+  # ========================================
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+
+  # ========================================
+  # Symfony API (FrankenPHP)
+  # ========================================
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+      target: prod
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      APP_SECRET: ${APP_SECRET:-!ChangeMe!}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-16}&charset=${POSTGRES_CHARSET:-utf8}
+      REDIS_URL: redis://redis:6379
+      MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
+      MERCURE_URL: ${MERCURE_URL:-http://api/.well-known/mercure}
+      MERCURE_PUBLIC_URL: ${MERCURE_PUBLIC_URL:-http://api.sentinel.localhost/.well-known/mercure}
+      MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+      CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-http://sentinel.localhost}
+      SERVER_NAME: ${SERVER_NAME:-:80}
+      FRANKENPHP_CONFIG: "worker ./public/index.php"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ========================================
+  # React Frontend (Vite dev server)
+  # ========================================
+  web:
+    image: node:20-alpine
+    working_dir: /app
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://api.sentinel.localhost}
+      VITE_WS_URL: ${VITE_WS_URL:-ws://api.sentinel.localhost/.well-known/mercure}
+    command: sh -c "npm install && npm run dev"
+
+  # ========================================
+  # PostgreSQL
+  # ========================================
+  database:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    volumes:
+      - database_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-app}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================
+  # Redis (cache + queue)
+  # ========================================
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  caddy_data:
+  caddy_config:
+  database_data:
+  redis_data:

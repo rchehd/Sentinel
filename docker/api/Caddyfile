@@ -1,0 +1,45 @@
+{
+	frankenphp {
+		{$FRANKENPHP_CONFIG}
+	}
+
+	auto_https off
+
+	order mercure before reverse_proxy
+}
+
+{$SERVER_NAME:api.sentinel.localhost} {
+	log {
+		output stdout
+		format console
+		level {$LOG_LEVEL:INFO}
+	}
+
+	# Mercure Hub (WebSockets)
+	mercure {
+		publisher_jwt {env.MERCURE_JWT_SECRET}
+		subscriber_jwt {env.MERCURE_JWT_SECRET}
+		cors_origins {$CORS_ALLOW_ORIGIN}
+		anonymous
+	}
+
+	encode zstd gzip
+
+	# Handle preflight
+	@options method OPTIONS
+	header @options Access-Control-Allow-Origin {env.CORS_ALLOW_ORIGIN}
+	header @options Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+	header @options Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+	header @options Access-Control-Allow-Credentials "true"
+	respond @options 204
+
+	# CORS headers for all other requests
+	header Access-Control-Allow-Origin {env.CORS_ALLOW_ORIGIN}
+	header Access-Control-Allow-Credentials "true"
+
+	# All requests -> Symfony (FrankenPHP)
+	route {
+		root * /app/public
+		php_server
+	}
+}

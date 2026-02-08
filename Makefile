@@ -1,0 +1,99 @@
+# Makefile
+
+.DEFAULT_GOAL := help
+
+.PHONY: help
+help: ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: install
+install: ## Install project
+	@echo "🚀 Installing FormBuilder..."
+	cp -n .env.example .env || true
+	docker compose build --no-cache
+	docker compose up -d
+	$(MAKE) api-install
+	$(MAKE) web-install
+	@echo "✅ Installation complete!"
+	@echo "🌐 Web: http://sentinel.localhost"
+	@echo "🔌 API: http://api.sentinel.localhost"
+
+.PHONY: start
+start: ## Start all services
+	docker compose up -d
+
+.PHONY: stop
+stop: ## Stop all services
+	docker compose down
+
+.PHONY: restart
+restart: stop start ## Restart all services
+
+.PHONY: logs
+logs: ## View logs
+	docker compose logs -f
+
+.PHONY: logs-api
+logs-api: ## View API logs
+	docker compose logs -f api
+
+.PHONY: logs-web
+logs-web: ## View Web logs
+	docker compose logs -f web
+
+# === API Commands ===
+
+.PHONY: api-install
+api-install: ## Install API dependencies
+	docker compose exec api composer install
+
+.PHONY: api-shell
+api-shell: ## API shell
+	docker compose exec api bash
+
+.PHONY: api-test
+api-test: ## Run API tests
+	docker compose exec api vendor/bin/simple-phpunit
+
+.PHONY: api-console
+api-console: ## Symfony console
+	docker compose exec api php bin/console $(filter-out $@,$(MAKECMDGOALS))
+
+.PHONY: db-migrate
+db-migrate: ## Run migrations
+	docker compose exec api php bin/console doctrine:migrations:migrate --no-interaction
+
+.PHONY: db-reset
+db-reset: ## Reset database (⚠️ DESTRUCTIVE)
+	docker compose exec api php bin/console doctrine:database:drop --force --if-exists
+	docker compose exec api php bin/console doctrine:database:create
+	$(MAKE) db-migrate
+
+# === Web Commands ===
+
+.PHONY: web-install
+web-install: ## Install Web dependencies
+	docker compose exec web npm install
+
+.PHONY: web-shell
+web-shell: ## Web shell
+	docker compose exec web sh
+
+.PHONY: web-test
+web-test: ## Run Web tests
+	docker compose exec web npm test
+
+.PHONY: web-build
+web-build: ## Build Web for production
+	docker compose exec web npm run build
+
+# === Cleanup ===
+
+.PHONY: clean
+clean: ## Clean all data (⚠️ DESTRUCTIVE)
+	docker compose down -v
+	rm -rf app/api/var/cache/*
+	rm -rf app/web/dist
+
+%:
+	@:

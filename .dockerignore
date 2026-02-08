@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (installed inside container)
+app/api/vendor/
+app/web/node_modules/
+
+# Build artifacts
+app/api/var/
+app/web/dist/
+
+# IDE
+.idea/
+.vscode/
+
+# Environment local overrides
+.env.local
+.env.*.local
+app/api/.env.local
+app/api/.env.*.local
+
+# Docs / config not needed in image
+docs/
+README.md
+.github/
+
+# OS
+.DS_Store
+Thumbs.db
