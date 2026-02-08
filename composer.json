@@ -1,5 +1,5 @@
 {
-    "name": "Sentinel/dev-tools",
+    "name": "sentinel/dev-tools",
     "description": "Dev tooling for Sentinel monorepo",
     "type": "project",
     "authors": [

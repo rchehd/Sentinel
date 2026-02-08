@@ -1,0 +1,72 @@
+name: Web - Code Quality
+
+on:
+  pull_request:
+    paths:
+      - 'app/web/**'
+      - '.github/workflows/web-ci.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'app/web/**'
+
+jobs:
+  eslint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: app/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: app/web
+
+      - name: Run ESLint
+        run: npx eslint .
+        working-directory: app/web
+
+  prettier:
+    name: Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: app/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: app/web
+
+      - name: Run Prettier
+        run: npx prettier --check "src/**/*.{ts,tsx,css,json}"
+        working-directory: app/web
+
+  typecheck:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: app/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: app/web
+
+      - name: Type check
+        run: npx tsc -b
+        working-directory: app/web

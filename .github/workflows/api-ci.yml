@@ -1,0 +1,58 @@
+name: API - Code Quality
+
+on:
+  pull_request:
+    paths:
+      - 'app/api/**'
+      - 'phpstan.neon'
+      - '.php-cs-fixer.dist.php'
+      - '.github/workflows/api-ci.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'app/api/**'
+      - 'phpstan.neon'
+      - '.php-cs-fixer.dist.php'
+
+jobs:
+  php-cs-fixer:
+    name: PHP-CS-Fixer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Install root dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run PHP-CS-Fixer
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+  phpstan:
+    name: PHPStan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Install root dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Install API dependencies
+        run: composer install --no-interaction --prefer-dist --no-scripts --working-dir=app/api
+
+      - name: Generate Symfony container
+        run: php app/api/bin/console cache:warmup --env=dev
+        env:
+          DATABASE_URL: "postgresql://localhost:5432/app?serverVersion=16"
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress
