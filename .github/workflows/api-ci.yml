@@ -2,21 +2,30 @@ name: API - Code Quality & Tests
 
 on:
   pull_request:
-    paths:
-      - 'app/api/**'
-      - 'phpstan.neon'
-      - '.php-cs-fixer.dist.php'
-      - '.github/workflows/api-ci.yml'
   push:
     branches: [master]
-    paths:
-      - 'app/api/**'
-      - 'phpstan.neon'
-      - '.php-cs-fixer.dist.php'
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'app/api/**'
+              - 'phpstan.neon'
+              - '.php-cs-fixer.dist.php'
+
   php-cs-fixer:
     name: PHP-CS-Fixer
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +43,8 @@ jobs:
 
   phpstan:
     name: PHPStan
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,6 +70,8 @@ jobs:
 
   tests:
     name: PHPUnit Tests
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
