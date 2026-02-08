@@ -1,10 +1,13 @@
 # Dependencies
+vendor/
 app/api/vendor/
 app/web/node_modules/
 
 # Build artifacts
 app/api/var/
 app/web/dist/
+var/
+.php-cs-fixer.cache
 
 # Environment files (local overrides)
 .env

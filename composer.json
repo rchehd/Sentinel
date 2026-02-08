@@ -1,0 +1,23 @@
+{
+    "name": "formbuilder/dev-tools",
+    "description": "Dev tooling for FormBuilder monorepo",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Roman Chekhaniuk",
+            "email": "romachehdkdk@gmail.com"
+        }
+    ],
+    "require-dev": {
+        "phpro/grumphp": "*",
+        "phpstan/phpstan": "*",
+        "phpstan/phpstan-symfony": "*",
+        "phpstan/phpstan-doctrine": "*",
+        "friendsofphp/php-cs-fixer": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpro/grumphp": true
+        }
+    }
+}

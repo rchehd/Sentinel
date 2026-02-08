@@ -95,5 +95,20 @@ clean: ## Clean all data (⚠️ DESTRUCTIVE)
 	rm -rf app/api/var/cache/*
 	rm -rf app/web/dist
 
+# === Code Quality ===
+
+.PHONY: lint
+lint: ## Run all linters (PHP-CS-Fixer, PHPStan, ESLint, Prettier)
+	vendor/bin/php-cs-fixer fix --dry-run --diff
+	vendor/bin/phpstan analyse --no-progress
+	cd app/web && npx eslint .
+	cd app/web && npx prettier --check "src/**/*.{ts,tsx,css,json}"
+
+.PHONY: fix
+fix: ## Auto-fix code style (PHP-CS-Fixer, ESLint, Prettier)
+	vendor/bin/php-cs-fixer fix
+	cd app/web && npx eslint . --fix
+	cd app/web && npx prettier --write "src/**/*.{ts,tsx,css,json}"
+
 %:
 	@:

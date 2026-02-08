@@ -1,0 +1,14 @@
+parameters:
+    level: 6
+    paths:
+        - app/api/src
+    scanDirectories:
+        - app/api/vendor
+    tmpDir: var/phpstan
+    symfony:
+        containerXmlPath: app/api/var/cache/dev/App_KernelDevDebugContainer.xml
+    treatPhpDocTypesAsCertain: false
+
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
