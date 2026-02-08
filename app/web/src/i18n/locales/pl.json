@@ -1,0 +1,34 @@
+{
+  "common": {
+    "welcome": "Witamy w Sentinel",
+    "language": "Język",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "create": "Utwórz",
+    "search": "Szukaj",
+    "loading": "Ładowanie...",
+    "error": "Wystąpił błąd",
+    "success": "Sukces",
+    "confirm": "Potwierdź",
+    "back": "Wstecz",
+    "next": "Dalej"
+  },
+  "auth": {
+    "login": "Zaloguj się",
+    "logout": "Wyloguj się",
+    "register": "Zarejestruj się",
+    "email": "E-mail",
+    "password": "Hasło",
+    "username": "Nazwa użytkownika",
+    "firstName": "Imię",
+    "lastName": "Nazwisko"
+  },
+  "nav": {
+    "home": "Strona główna",
+    "dashboard": "Panel",
+    "settings": "Ustawienia",
+    "profile": "Profil"
+  }
+}
