@@ -10,7 +10,7 @@ var/
 .php-cs-fixer.cache
 
 # Environment files (local overrides)
-.env
+/.env
 .env.local
 .env.*.local
 app/api/.env.local
