@@ -28,7 +28,7 @@ RUN install-php-extensions \
     zip
 
 # Configure PHP
-COPY docker/api/conf.d/app.ini $PHP_INI_DIR/conf.d/
+COPY docker/api/conf.d/10-app.ini $PHP_INI_DIR/conf.d/
 
 # Set working directory
 WORKDIR /app
@@ -51,7 +51,7 @@ ENV APP_ENV=dev \
 RUN install-php-extensions xdebug
 
 # Development PHP config
-COPY docker/api/conf.d/app.dev.ini $PHP_INI_DIR/conf.d/
+COPY docker/api/conf.d/20-app.dev.ini $PHP_INI_DIR/conf.d/
 
 # Set permission for FrankenPHP
 RUN mkdir -p /app/var && \
@@ -87,7 +87,7 @@ ENV APP_ENV=prod \
     APP_DEBUG=0
 
 # Production PHP config
-COPY docker/api/conf.d/app.prod.ini $PHP_INI_DIR/conf.d/
+COPY docker/api/conf.d/20-app.prod.ini $PHP_INI_DIR/conf.d/
 
 # Copy built application from builder
 COPY --from=builder --chown=www-data:www-data /app /app

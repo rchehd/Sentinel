@@ -57,7 +57,7 @@ api-shell: ## API shell
 
 .PHONY: api-test
 api-test: ## Run API tests
-	docker compose exec api vendor/bin/simple-phpunit
+	docker compose exec -e XDEBUG_MODE=off -e APP_ENV=test api php bin/phpunit
 
 .PHONY: api-console
 api-console: ## Symfony console

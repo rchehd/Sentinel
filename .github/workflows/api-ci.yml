@@ -1,22 +1,31 @@
-name: API - Code Quality
+name: API - Code Quality & Tests
 
 on:
   pull_request:
-    paths:
-      - 'app/api/**'
-      - 'phpstan.neon'
-      - '.php-cs-fixer.dist.php'
-      - '.github/workflows/api-ci.yml'
   push:
     branches: [master]
-    paths:
-      - 'app/api/**'
-      - 'phpstan.neon'
-      - '.php-cs-fixer.dist.php'
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'app/api/**'
+              - 'phpstan.neon'
+              - '.php-cs-fixer.dist.php'
+
   php-cs-fixer:
     name: PHP-CS-Fixer
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +43,8 @@ jobs:
 
   phpstan:
     name: PHPStan
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,3 +67,50 @@ jobs:
 
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --no-progress
+
+  tests:
+    name: PHPUnit Tests
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sentinel
+          POSTGRES_PASSWORD: sentinel
+          POSTGRES_DB: sentinel
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, intl
+          tools: composer:v2
+
+      - name: Install API dependencies
+        run: composer install --no-interaction --prefer-dist --working-dir=app/api
+
+      - name: Create test database
+        run: php app/api/bin/console doctrine:database:create --env=test --if-not-exists
+        env:
+          DATABASE_URL: "postgresql://sentinel:sentinel@localhost:5432/sentinel?serverVersion=16&charset=utf8"
+
+      - name: Run migrations
+        run: php app/api/bin/console doctrine:migrations:migrate --no-interaction --env=test
+        env:
+          DATABASE_URL: "postgresql://sentinel:sentinel@localhost:5432/sentinel?serverVersion=16&charset=utf8"
+
+      - name: Run PHPUnit
+        run: php bin/phpunit --colors=always
+        working-directory: app/api
+        env:
+          DATABASE_URL: "postgresql://sentinel:sentinel@localhost:5432/sentinel?serverVersion=16&charset=utf8"
