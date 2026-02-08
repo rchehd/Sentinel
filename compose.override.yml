@@ -21,6 +21,16 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  worker:
+    build:
+      target: dev
+    volumes:
+      - ./app/api:/app
+    environment:
+      APP_DEBUG: "true"
+      APP_ENV: dev
+      XDEBUG_MODE: "off"
+
   web:
     volumes:
       - ./app/web:/app

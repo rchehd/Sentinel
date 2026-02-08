@@ -41,6 +41,10 @@ logs-api: ## View API logs
 logs-web: ## View Web logs
 	docker compose logs -f web
 
+.PHONY: logs-worker
+logs-worker: ## View Worker logs
+	docker compose logs -f worker
+
 # === API Commands ===
 
 .PHONY: api-install
@@ -68,6 +72,20 @@ db-reset: ## Reset database (⚠️ DESTRUCTIVE)
 	docker compose exec api php bin/console doctrine:database:drop --force --if-exists
 	docker compose exec api php bin/console doctrine:database:create
 	$(MAKE) db-migrate
+
+# === Worker Commands ===
+
+.PHONY: worker-restart
+worker-restart: ## Restart the worker
+	docker compose restart worker
+
+.PHONY: worker-failed
+worker-failed: ## List failed messages
+	docker compose exec worker php bin/console messenger:failed:show
+
+.PHONY: worker-retry
+worker-retry: ## Retry all failed messages
+	docker compose exec worker php bin/console messenger:failed:retry
 
 # === Web Commands ===
 

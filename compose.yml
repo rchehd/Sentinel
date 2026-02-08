@@ -52,6 +52,30 @@ services:
       start_period: 40s
 
   # ========================================
+  # Messenger Worker (async jobs)
+  # ========================================
+  worker:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+      target: prod
+    restart: unless-stopped
+    command: php bin/console messenger:consume async failed --time-limit=3600 --memory-limit=256M -vv
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      APP_SECRET: ${APP_SECRET:-!ChangeMe!}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-16}&charset=${POSTGRES_CHARSET:-utf8}
+      REDIS_URL: redis://redis:6379
+      MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
+      MERCURE_URL: ${MERCURE_URL:-http://api/.well-known/mercure}
+      MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
+
+  # ========================================
   # React Frontend (Vite dev server)
   # ========================================
   web:
