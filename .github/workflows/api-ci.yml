@@ -66,7 +66,7 @@ jobs:
         env:
           POSTGRES_USER: sentinel
           POSTGRES_PASSWORD: sentinel
-          POSTGRES_DB: sentinel_test
+          POSTGRES_DB: sentinel
         ports:
           - 5432:5432
         options: >-
@@ -86,12 +86,18 @@ jobs:
       - name: Install API dependencies
         run: composer install --no-interaction --prefer-dist --working-dir=app/api
 
+      - name: Create test database
+        run: php app/api/bin/console doctrine:database:create --env=test --if-not-exists
+        env:
+          DATABASE_URL: "postgresql://sentinel:sentinel@localhost:5432/sentinel?serverVersion=16&charset=utf8"
+
       - name: Run migrations
         run: php app/api/bin/console doctrine:migrations:migrate --no-interaction --env=test
         env:
-          DATABASE_URL: "postgresql://sentinel:sentinel@localhost:5432/sentinel_test?serverVersion=16&charset=utf8"
+          DATABASE_URL: "postgresql://sentinel:sentinel@localhost:5432/sentinel?serverVersion=16&charset=utf8"
 
       - name: Run PHPUnit
-        run: php app/api/bin/phpunit --colors=always
+        run: php bin/phpunit --colors=always
+        working-directory: app/api
         env:
-          DATABASE_URL: "postgresql://sentinel:sentinel@localhost:5432/sentinel_test?serverVersion=16&charset=utf8"
+          DATABASE_URL: "postgresql://sentinel:sentinel@localhost:5432/sentinel?serverVersion=16&charset=utf8"
