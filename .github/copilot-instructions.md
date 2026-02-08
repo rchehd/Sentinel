@@ -106,13 +106,13 @@ PHP ini files live in `docker/api/conf.d/` and are copied into the container at 
 
 | File | Stage | Purpose |
 |------|-------|---------|
-| `app.ini` | All | Base config: timezone, memory limit, upload limits, OPcache |
-| `app.dev.ini` | Dev only | Error display, OPcache revalidation, Xdebug settings |
-| `app.prod.ini` | Prod only | Errors hidden, OPcache optimized, Symfony preloading |
+| `10-app.ini` | All | Base config: timezone, memory limit, upload limits, OPcache |
+| `20-app.dev.ini` | Dev only | OPcache disabled, error display, Xdebug settings |
+| `20-app.prod.ini` | Prod only | Errors hidden, OPcache optimized, Symfony preloading |
 
 ### Xdebug
 
-Xdebug is installed only in the `dev` Docker stage (not in production). Configured via `docker/api/conf.d/app.dev.ini` and `compose.override.yml` (`XDEBUG_MODE=debug`).
+Xdebug is installed only in the `dev` Docker stage (not in production). Configured via `docker/api/conf.d/20-app.dev.ini` and `compose.override.yml` (`XDEBUG_MODE=debug`).
 
 **PhpStorm setup**:
 1. Settings → PHP → Servers: add server named `sentinel`, host `api.sentinel.localhost`, port `80`, Debugger `Xdebug`. Enable path mappings: map project's `app/api` → `/app`

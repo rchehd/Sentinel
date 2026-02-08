@@ -8,6 +8,8 @@ parameters:
     symfony:
         containerXmlPath: app/api/var/cache/dev/App_KernelDevDebugContainer.xml
     treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        - '#Property .+::\$id \(.+\) is never assigned .+ so it can be removed from the property type#'
 
 includes:
     - vendor/phpstan/phpstan-symfony/extension.neon
