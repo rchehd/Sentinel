@@ -9,11 +9,11 @@ framework:
         routing:
             Symfony\Component\Mailer\Messenger\SendEmailMessage: async
 
-# when@test:
-#    framework:
-#        messenger:
-#            transports:
-#                async: 'in-memory://'
+when@test:
+    framework:
+        messenger:
+            transports:
+                async: 'in-memory://'
 
 when@dev:
     framework:
