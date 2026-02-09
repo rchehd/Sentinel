@@ -13,22 +13,52 @@
     "success": "Sukces",
     "confirm": "Potwierdź",
     "back": "Wstecz",
-    "next": "Dalej"
+    "next": "Dalej",
+    "or": "Lub kontynuuj z e-mailem",
+    "required": "Wymagane"
   },
   "auth": {
-    "login": "Zaloguj się",
+    "login": "Logowanie",
     "logout": "Wyloguj się",
-    "register": "Zarejestruj się",
+    "register": "Rejestracja",
+    "signIn": "Zaloguj się",
+    "signUp": "Zarejestruj się",
     "email": "E-mail",
     "password": "Hasło",
+    "confirmPassword": "Potwierdź hasło",
     "username": "Nazwa użytkownika",
     "firstName": "Imię",
-    "lastName": "Nazwisko"
+    "lastName": "Nazwisko",
+    "forgotPassword": "Zapomniałeś hasła?",
+    "noAccount": "Nie masz konta?",
+    "hasAccount": "Masz już konto?",
+    "welcomeBack": "Witaj ponownie!",
+    "welcomeBackDesc": "Wprowadź dane logowania, aby uzyskać dostęp.",
+    "createAccount": "Utwórz konto",
+    "createAccountDesc": "Wypełnij poniższe dane, aby rozpocząć.",
+    "role": "Typ konta",
+    "roleSingle": "Osobiste",
+    "roleCompany": "Firma",
+    "createOrganization": "Utwórz organizację",
+    "organizationLabel": "Nazwa firmy",
+    "organizationDomain": "Domena firmy",
+    "registrationSuccess": "Rejestracja zakończona. Sprawdź e-mail, aby aktywować konto.",
+    "activationSuccess": "Konto zostało aktywowane.",
+    "activationFailed": "Nieprawidłowy token aktywacji.",
+    "passwordMinLength": "Hasło musi mieć co najmniej 8 znaków",
+    "passwordsMustMatch": "Hasła muszą się zgadzać",
+    "ssoGoogle": "Google",
+    "ssoGithub": "GitHub"
   },
   "nav": {
     "home": "Strona główna",
     "dashboard": "Panel",
     "settings": "Ustawienia",
     "profile": "Profil"
+  },
+  "footer": {
+    "privacy": "Polityka prywatności",
+    "terms": "Regulamin",
+    "support": "Kontakt z pomocą"
   }
 }

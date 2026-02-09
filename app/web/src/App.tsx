@@ -1,17 +1,16 @@
-import { useTranslation } from 'react-i18next'
-import { Title, Text } from '@mantine/core'
-import { AppLayout } from '@/components/layout'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { LoginPage, RegisterPage, DashboardPage } from '@/pages'
 
 function App() {
-  const { t } = useTranslation()
-
   return (
-    <AppLayout>
-      <Title order={2}>{t('common.welcome')}</Title>
-      <Text mt="md" c="dimmed">
-        {t('nav.dashboard')}
-      </Text>
-    </AppLayout>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

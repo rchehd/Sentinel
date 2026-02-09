@@ -13,22 +13,52 @@
     "success": "Успішно",
     "confirm": "Підтвердити",
     "back": "Назад",
-    "next": "Далі"
+    "next": "Далі",
+    "or": "Або продовжити з електронною поштою",
+    "required": "Обов'язкове"
   },
   "auth": {
-    "login": "Увійти",
+    "login": "Вхід",
     "logout": "Вийти",
-    "register": "Зареєструватися",
+    "register": "Реєстрація",
+    "signIn": "Увійти",
+    "signUp": "Зареєструватися",
     "email": "Електронна пошта",
     "password": "Пароль",
+    "confirmPassword": "Підтвердіть пароль",
     "username": "Ім'я користувача",
     "firstName": "Ім'я",
-    "lastName": "Прізвище"
+    "lastName": "Прізвище",
+    "forgotPassword": "Забули пароль?",
+    "noAccount": "Немає облікового запису?",
+    "hasAccount": "Вже маєте обліковий запис?",
+    "welcomeBack": "З поверненням!",
+    "welcomeBackDesc": "Введіть свої дані для доступу до робочого простору.",
+    "createAccount": "Створити обліковий запис",
+    "createAccountDesc": "Заповніть дані нижче, щоб почати.",
+    "role": "Тип облікового запису",
+    "roleSingle": "Особистий",
+    "roleCompany": "Компанія",
+    "createOrganization": "Створити організацію",
+    "organizationLabel": "Назва компанії",
+    "organizationDomain": "Домен компанії",
+    "registrationSuccess": "Реєстрація успішна. Перевірте електронну пошту для активації.",
+    "activationSuccess": "Обліковий запис активовано.",
+    "activationFailed": "Недійсний токен активації.",
+    "passwordMinLength": "Пароль має містити щонайменше 8 символів",
+    "passwordsMustMatch": "Паролі повинні збігатися",
+    "ssoGoogle": "Google",
+    "ssoGithub": "GitHub"
   },
   "nav": {
     "home": "Головна",
     "dashboard": "Панель управління",
     "settings": "Налаштування",
     "profile": "Профіль"
+  },
+  "footer": {
+    "privacy": "Політика конфіденційності",
+    "terms": "Умови використання",
+    "support": "Зв'язатися з підтримкою"
   }
 }
