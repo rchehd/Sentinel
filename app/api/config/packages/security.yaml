@@ -22,6 +22,7 @@ security:
                 check_path: /api/login
                 username_path: email
                 password_path: password
+                failure_handler: App\Security\LoginFailureHandler
             stateless: true
 
     # Note: Only the *first* matching rule is applied
