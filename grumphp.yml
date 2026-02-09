@@ -1,13 +1,9 @@
 grumphp:
     process_timeout: 120
     tasks:
-        phpcsfixer:
-            config: .php-cs-fixer.dist.php
-            triggered_by: ['php']
-        phpstan:
-            configuration: phpstan.neon
-            triggered_by: ['php']
-        eslint:
-            bin: app/web/node_modules/.bin/eslint
-            config: app/web/eslint.config.js
-            triggered_by: ['ts', 'tsx', 'js', 'jsx']
+        shell:
+            scripts:
+                - ["docker", "compose", "run", "--rm", "-T", "tools", "php", "vendor/bin/php-cs-fixer", "fix", "--dry-run", "--diff"]
+                - ["docker", "compose", "run", "--rm", "-T", "tools", "php", "vendor/bin/phpstan", "analyse", "--no-progress", "--memory-limit=256M"]
+                - ["docker", "compose", "exec", "-T", "web", "npx", "eslint", "src", "--quiet"]
+                - ["docker", "compose", "exec", "-T", "web", "npx", "tsc", "--noEmit"]
