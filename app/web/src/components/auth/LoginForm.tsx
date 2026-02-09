@@ -44,7 +44,11 @@ export function LoginForm() {
       if (!res.ok) {
         const data = await res.json()
         const code = data.code as string | undefined
-        throw new Error(code && t(`errors.${code}`) !== `errors.${code}` ? t(`errors.${code}`) : data.error || t('common.error'))
+        throw new Error(
+          code && t(`errors.${code}`) !== `errors.${code}`
+            ? t(`errors.${code}`)
+            : data.error || t('common.error'),
+        )
       }
 
       navigate('/home', { replace: true })

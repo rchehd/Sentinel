@@ -20,12 +20,17 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         flexDirection: 'column',
         position: 'relative',
         overflow: 'hidden',
-        backgroundImage: 'radial-gradient(var(--mantine-color-default-border) 1px, transparent 1px)',
+        backgroundImage:
+          'radial-gradient(var(--mantine-color-default-border) 1px, transparent 1px)',
         backgroundSize: '20px 20px',
       }}
     >
       {/* Header */}
-      <Group justify="space-between" p={isMobile ? 'xs' : 'md'} style={{ position: 'relative', zIndex: 10 }}>
+      <Group
+        justify="space-between"
+        p={isMobile ? 'xs' : 'md'}
+        style={{ position: 'relative', zIndex: 10 }}
+      >
         <Group gap="xs">
           <SentinelLogo />
           <Text fw={700} size={isMobile ? 'md' : 'lg'}>
