@@ -17,6 +17,12 @@
     "or": "Lub kontynuuj z e-mailem",
     "required": "Wymagane"
   },
+  "home": {
+    "description": "Twoje miejsce do tworzenia formularzy. Oto krótki przegląd.",
+    "forms": "Formularze",
+    "submissions": "Zgłoszenia",
+    "workflows": "Przepływy pracy"
+  },
   "auth": {
     "login": "Logowanie",
     "logout": "Wyloguj się",
@@ -60,5 +66,10 @@
     "privacy": "Polityka prywatności",
     "terms": "Regulamin",
     "support": "Kontakt z pomocą"
+  },
+  "errors": {
+    "invalid_credentials": "Nieprawidłowy e-mail lub hasło.",
+    "account_not_activated": "Konto nie jest aktywowane. Sprawdź swoją pocztę e-mail.",
+    "org_label_required": "Nazwa organizacji jest wymagana."
   }
 }

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import {
   AppShell,
   Burger,
@@ -6,6 +7,7 @@ import {
   Title,
   Select,
   ActionIcon,
+  Button,
   useMantineColorScheme,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
@@ -18,8 +20,14 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
   const [opened, { toggle }] = useDisclosure(true)
   const { colorScheme, toggleColorScheme } = useMantineColorScheme()
+
+  const handleLogout = () => {
+    // TODO: call logout API / clear auth state
+    navigate('/login', { replace: true })
+  }
 
   return (
     <AppShell
@@ -60,6 +68,10 @@ export function AppLayout({ children }: AppLayoutProps) {
             >
               {colorScheme === 'dark' ? '☀️' : '🌙'}
             </ActionIcon>
+
+            <Button variant="subtle" size="xs" color="red" onClick={handleLogout}>
+              {t('auth.logout')}
+            </Button>
           </Group>
         </Group>
       </AppShell.Header>

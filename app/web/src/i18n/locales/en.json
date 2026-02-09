@@ -17,6 +17,12 @@
     "or": "Or continue with email",
     "required": "Required"
   },
+  "home": {
+    "description": "Your form building workspace. Here's a quick overview.",
+    "forms": "Forms",
+    "submissions": "Submissions",
+    "workflows": "Workflows"
+  },
   "auth": {
     "login": "Login",
     "logout": "Log out",
@@ -60,5 +66,10 @@
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "support": "Contact Support"
+  },
+  "errors": {
+    "invalid_credentials": "Invalid email or password.",
+    "account_not_activated": "Account is not activated. Please check your email.",
+    "org_label_required": "Organization name is required."
   }
 }

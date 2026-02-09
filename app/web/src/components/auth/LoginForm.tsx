@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Paper,
   Title,
@@ -16,9 +16,13 @@ import {
 import { useMediaQuery } from '@mantine/hooks'
 import { SsoButtons } from './SsoButtons'
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
+
 export function LoginForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const activated = searchParams.get('activated') === 'true'
   const isMobile = useMediaQuery('(max-width: 480px)')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -30,11 +34,22 @@ export function LoginForm() {
     setError('')
     setLoading(true)
 
-    // TODO: implement actual login API call
     try {
-      console.log('Login:', { email, password })
-    } catch {
-      setError(t('common.error'))
+      const res = await fetch(`${API_URL}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        const code = data.code as string | undefined
+        throw new Error(code && t(`errors.${code}`) !== `errors.${code}` ? t(`errors.${code}`) : data.error || t('common.error'))
+      }
+
+      navigate('/home', { replace: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('common.error'))
     } finally {
       setLoading(false)
     }
@@ -55,6 +70,12 @@ export function LoginForm() {
 
       <form onSubmit={handleSubmit}>
         <Stack>
+          {activated && (
+            <Alert color="green" variant="light">
+              {t('auth.activationSuccess')}
+            </Alert>
+          )}
+
           {error && (
             <Alert color="red" variant="light">
               {error}

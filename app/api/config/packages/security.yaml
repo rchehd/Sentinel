@@ -18,6 +18,11 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            json_login:
+                check_path: /api/login
+                username_path: email
+                password_path: password
+            stateless: true
 
     # Note: Only the *first* matching rule is applied
     access_control:

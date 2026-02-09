@@ -83,7 +83,8 @@ export function RegisterForm() {
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.detail || data.error || t('common.error'))
+        const code = data.code as string | undefined
+        throw new Error(code && t(`errors.${code}`) !== `errors.${code}` ? t(`errors.${code}`) : data.detail || data.error || t('common.error'))
       }
 
       setSuccess(true)

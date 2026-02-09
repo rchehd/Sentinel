@@ -24,6 +24,8 @@ class RegistrationController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly MailerInterface $mailer,
+        #[\Symfony\Component\DependencyInjection\Attribute\Autowire('%env(default::FRONTEND_URL)%')]
+        private readonly string $frontendUrl = 'https://sentinel.localhost',
     ) {
     }
 
@@ -35,7 +37,7 @@ class RegistrationController extends AbstractController
         if ($dto->role === UserRole::OrgOwner->value) {
             if (empty($dto->organizationLabel)) {
                 return $this->json(
-                    ['error' => 'Organization label is required for company admin registration.'],
+                    ['code' => 'org_label_required', 'error' => 'Organization label is required for company admin registration.'],
                     Response::HTTP_UNPROCESSABLE_ENTITY,
                 );
             }
@@ -96,7 +98,7 @@ class RegistrationController extends AbstractController
 
     private function sendActivationEmail(User $user, string $token): void
     {
-        $activationUrl = $this->generateUrl('api_activate', ['token' => $token], 0);
+        $activationUrl = \sprintf('%s/activate/%s', rtrim($this->frontendUrl, '/'), $token);
 
         $email = (new Email())
             ->from('noreply@sentinel.localhost')
