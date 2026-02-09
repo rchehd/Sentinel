@@ -15,6 +15,7 @@ import {
   Alert,
   Collapse,
 } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import { SsoButtons } from './SsoButtons'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
@@ -22,6 +23,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
 export function RegisterForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const isMobile = useMediaQuery('(max-width: 480px)')
 
   const [createOrg, setCreateOrg] = useState(false)
   const [email, setEmail] = useState('')
@@ -94,7 +96,7 @@ export function RegisterForm() {
 
   if (success) {
     return (
-      <Paper radius="md" p="xl" withBorder w="100%">
+      <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%">
         <Alert color="green" variant="light" title={t('common.success')}>
           {t('auth.registrationSuccess')}
         </Alert>
@@ -106,7 +108,7 @@ export function RegisterForm() {
   }
 
   return (
-    <Paper radius="md" p="xl" withBorder w="100%">
+    <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%">
       <Title order={2} ta="center" mb={4}>
         {t('auth.createAccount')}
       </Title>

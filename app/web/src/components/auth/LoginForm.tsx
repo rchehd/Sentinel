@@ -13,11 +13,13 @@ import {
   Stack,
   Alert,
 } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import { SsoButtons } from './SsoButtons'
 
 export function LoginForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const isMobile = useMediaQuery('(max-width: 480px)')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -39,7 +41,7 @@ export function LoginForm() {
   }
 
   return (
-    <Paper radius="md" p="xl" withBorder w="100%">
+    <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%">
       <Title order={2} ta="center" mb={4}>
         {t('auth.welcomeBack')}
       </Title>

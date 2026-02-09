@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { Box, Group, Text, Select, Anchor } from '@mantine/core'
+import { Box, Group, Text, Select, Anchor, ActionIcon, useMantineColorScheme } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import { supportedLanguages } from '@/i18n'
 
 interface AuthLayoutProps {
@@ -8,6 +9,8 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   const { t, i18n } = useTranslation()
+  const isMobile = useMediaQuery('(max-width: 480px)')
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme()
 
   return (
     <Box
@@ -22,31 +25,43 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       }}
     >
       {/* Header */}
-      <Group justify="space-between" p="md" style={{ position: 'relative', zIndex: 10 }}>
+      <Group justify="space-between" p={isMobile ? 'xs' : 'md'} style={{ position: 'relative', zIndex: 10 }}>
         <Group gap="xs">
           <SentinelLogo />
-          <Text fw={700} size="lg">
+          <Text fw={700} size={isMobile ? 'md' : 'lg'}>
             Sentinel
           </Text>
         </Group>
-        <Select
-          size="xs"
-          w={130}
-          data={supportedLanguages.map((lang) => ({
-            value: lang.code,
-            label: lang.label,
-          }))}
-          value={i18n.language}
-          onChange={(value) => value && i18n.changeLanguage(value)}
-          allowDeselect={false}
-          aria-label={t('common.language')}
-        />
+        <Group gap="xs">
+          <Select
+            size="xs"
+            w={130}
+            data={supportedLanguages.map((lang) => ({
+              value: lang.code,
+              label: lang.label,
+            }))}
+            value={i18n.language}
+            onChange={(value) => value && i18n.changeLanguage(value)}
+            allowDeselect={false}
+            aria-label={t('common.language')}
+          />
+          <ActionIcon
+            variant="default"
+            size="lg"
+            onClick={toggleColorScheme}
+            aria-label="Toggle color scheme"
+          >
+            {colorScheme === 'dark' ? '☀️' : '🌙'}
+          </ActionIcon>
+        </Group>
       </Group>
 
       {/* Main */}
       <Box
-        w={440}
+        w="100%"
+        maw={440}
         mx="auto"
+        px="md"
         style={{
           flex: 1,
           display: 'flex',
