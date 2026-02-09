@@ -17,6 +17,8 @@ install: ## Install project
 	@echo "✅ Installation complete!"
 	@echo "🌐 Web: https://sentinel.localhost"
 	@echo "🔌 API: https://api.sentinel.localhost"
+	@echo ""
+	@echo "💡 Run 'make ide-sync' to sync node_modules for IDE autocompletion"
 
 .PHONY: start
 start: ## Start all services
@@ -116,17 +118,24 @@ clean: ## Clean all data (⚠️ DESTRUCTIVE)
 # === Code Quality ===
 
 .PHONY: lint
-lint: ## Run all linters (PHP-CS-Fixer, PHPStan, ESLint, Prettier)
-	vendor/bin/php-cs-fixer fix --dry-run --diff
-	vendor/bin/phpstan analyse --no-progress
-	cd app/web && npx eslint .
-	cd app/web && npx prettier --check "src/**/*.{ts,tsx,css,json}"
+lint: ## Run all linters (PHP-CS-Fixer, PHPStan, ESLint, TypeScript)
+	docker compose run --rm -T tools php vendor/bin/php-cs-fixer fix --dry-run --diff
+	docker compose run --rm -T tools php vendor/bin/phpstan analyse --no-progress --memory-limit=256M
+	docker compose exec -T web npx eslint src --quiet
+	docker compose exec -T web npx tsc --noEmit
 
 .PHONY: fix
-fix: ## Auto-fix code style (PHP-CS-Fixer, ESLint, Prettier)
-	vendor/bin/php-cs-fixer fix
-	cd app/web && npx eslint . --fix
-	cd app/web && npx prettier --write "src/**/*.{ts,tsx,css,json}"
+fix: ## Auto-fix code style (PHP-CS-Fixer, ESLint)
+	docker compose run --rm -T tools php vendor/bin/php-cs-fixer fix
+	docker compose exec -T web npx eslint src --fix
+
+# === IDE Support ===
+
+.PHONY: ide-sync
+ide-sync: ## Sync node_modules from container to host (for IDE autocompletion)
+	@echo "📦 Syncing node_modules from container..."
+	docker compose cp web:/app/node_modules app/web/
+	@echo "✅ node_modules synced to app/web/node_modules"
 
 %:
 	@:

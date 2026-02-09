@@ -73,6 +73,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read', 'user:write'])]
     private ?Organization $organization = null;
 
+    #[ORM\Column(options: ['default' => false])]
+    #[Groups(['user:read'])]
+    private bool $isActive = false;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $activationToken = null;
+
     public function getId(): ?Uuid
     {
         return $this->id;
@@ -163,6 +170,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         // Clear temporary sensitive data if stored
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): static
+    {
+        $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    public function getActivationToken(): ?string
+    {
+        return $this->activationToken;
+    }
+
+    public function setActivationToken(?string $activationToken): static
+    {
+        $this->activationToken = $activationToken;
+
+        return $this;
     }
 
     public function getOrganization(): ?Organization

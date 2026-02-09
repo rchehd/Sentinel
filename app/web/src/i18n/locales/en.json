@@ -1,0 +1,75 @@
+{
+  "common": {
+    "welcome": "Welcome to Sentinel",
+    "language": "Language",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "or": "Or continue with email",
+    "required": "Required"
+  },
+  "home": {
+    "description": "Your form building workspace. Here's a quick overview.",
+    "forms": "Forms",
+    "submissions": "Submissions",
+    "workflows": "Workflows"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Log out",
+    "register": "Registration",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "username": "Username",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "welcomeBack": "Welcome back!",
+    "welcomeBackDesc": "Enter your credentials to access your workspace.",
+    "createAccount": "Create an account",
+    "createAccountDesc": "Fill in the details below to get started.",
+    "role": "Account type",
+    "roleSingle": "Personal",
+    "roleCompany": "Company",
+    "createOrganization": "Create an organization",
+    "organizationLabel": "Company name",
+    "organizationDomain": "Company domain",
+    "registrationSuccess": "Registration successful. Please check your email to activate your account.",
+    "activationSuccess": "Account activated successfully.",
+    "activationFailed": "Invalid activation token.",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "passwordsMustMatch": "Passwords must match",
+    "ssoGoogle": "Google",
+    "ssoGithub": "GitHub"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "profile": "Profile"
+  },
+  "footer": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "support": "Contact Support"
+  },
+  "errors": {
+    "invalid_credentials": "Invalid email or password.",
+    "account_not_activated": "Account is not activated. Please check your email.",
+    "org_label_required": "Organization name is required."
+  }
+}
