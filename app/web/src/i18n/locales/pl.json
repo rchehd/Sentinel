@@ -9,6 +9,7 @@
     "create": "Utwórz",
     "search": "Szukaj",
     "loading": "Ładowanie...",
+    "initializingCore": "Inicjalizacja rdzenia Sentinel...",
     "error": "Wystąpił błąd",
     "success": "Sukces",
     "confirm": "Potwierdź",
@@ -54,7 +55,10 @@
     "passwordMinLength": "Hasło musi mieć co najmniej 8 znaków",
     "passwordsMustMatch": "Hasła muszą się zgadzać",
     "ssoGoogle": "Google",
-    "ssoGithub": "GitHub"
+    "ssoGithub": "GitHub",
+    "accessGranted": "Dostęp przyznany",
+    "authenticationFailed": "Błąd uwierzytelniania",
+    "registrationFailed": "Błąd rejestracji"
   },
   "nav": {
     "home": "Strona główna",

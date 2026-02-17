@@ -1,0 +1,1 @@
+export { SentinelLogo } from './SentinelLogo'

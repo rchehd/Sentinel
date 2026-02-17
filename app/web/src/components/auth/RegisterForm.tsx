@@ -12,11 +12,12 @@ import {
   Anchor,
   Stack,
   Checkbox,
-  Alert,
   Collapse,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { SsoButtons } from './SsoButtons'
+import { useToast } from '@/components/toast'
+import { SentinelLogo } from '@/components/logo'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
 
@@ -24,6 +25,7 @@ export function RegisterForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const isMobile = useMediaQuery('(max-width: 480px)')
+  const { showToast } = useToast()
 
   const [createOrg, setCreateOrg] = useState(false)
   const [email, setEmail] = useState('')
@@ -34,26 +36,24 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [orgLabel, setOrgLabel] = useState('')
   const [orgDomain, setOrgDomain] = useState('')
-  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
 
     if (password.length < 8) {
-      setError(t('auth.passwordMinLength'))
+      showToast('error', t('auth.passwordMinLength'))
       return
     }
 
     if (password !== confirmPassword) {
-      setError(t('auth.passwordsMustMatch'))
+      showToast('error', t('auth.passwordsMustMatch'))
       return
     }
 
     if (createOrg && !orgLabel.trim()) {
-      setError(t('auth.organizationLabel'))
+      showToast('error', t('auth.organizationLabel'))
       return
     }
 
@@ -91,9 +91,11 @@ export function RegisterForm() {
         )
       }
 
+      showToast('success', t('common.success'), t('auth.registrationSuccess'))
       setSuccess(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.error'))
+      const message = err instanceof Error ? err.message : t('common.error')
+      showToast('error', t('auth.registrationFailed'), message)
     } finally {
       setLoading(false)
     }
@@ -102,18 +104,22 @@ export function RegisterForm() {
   if (success) {
     return (
       <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%">
-        <Alert color="green" variant="light" title={t('common.success')}>
-          {t('auth.registrationSuccess')}
-        </Alert>
-        <Button fullWidth mt="lg" variant="light" onClick={() => navigate('/login')}>
-          {t('auth.signIn')}
-        </Button>
+        <Stack ta="center" gap="md">
+          <Title order={3}>{t('common.success')}</Title>
+          <Text c="dimmed" size="sm">
+            {t('auth.registrationSuccess')}
+          </Text>
+          <Button fullWidth variant="light" onClick={() => navigate('/login')}>
+            {t('auth.signIn')}
+          </Button>
+        </Stack>
       </Paper>
     )
   }
 
   return (
-    <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%">
+    <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%" className="theme-transition-slow">
+      <SentinelLogo size={48} />
       <Title order={2} ta="center" mb={4}>
         {t('auth.createAccount')}
       </Title>
@@ -127,12 +133,6 @@ export function RegisterForm() {
 
       <form onSubmit={handleSubmit}>
         <Stack>
-          {error && (
-            <Alert color="red" variant="light">
-              {error}
-            </Alert>
-          )}
-
           <TextInput
             required
             label={t('auth.email')}

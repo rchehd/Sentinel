@@ -1,0 +1,40 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease, visibility 0.5s, background-color 0.5s ease ;
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  &.hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.full {
+  background-color: var(--mantine-color-body);
+  z-index: 60;
+}
+
+.route {
+  background-color: color-mix(in srgb, var(--mantine-color-body) 80%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.text {
+  margin-top: 1.5rem;
+  font-family: var(--mantine-font-family-monospace, 'JetBrains Mono', monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--mantine-color-dimmed);
+  text-transform: uppercase;
+  transition: color 0.5s ease;
+}

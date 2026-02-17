@@ -9,6 +9,7 @@
     "create": "Створити",
     "search": "Пошук",
     "loading": "Завантаження...",
+    "initializingCore": "Ініціалізація ядра Sentinel...",
     "error": "Сталася помилка",
     "success": "Успішно",
     "confirm": "Підтвердити",
@@ -54,7 +55,10 @@
     "passwordMinLength": "Пароль має містити щонайменше 8 символів",
     "passwordsMustMatch": "Паролі повинні збігатися",
     "ssoGoogle": "Google",
-    "ssoGithub": "GitHub"
+    "ssoGithub": "GitHub",
+    "accessGranted": "Доступ надано",
+    "authenticationFailed": "Помилка автентифікації",
+    "registrationFailed": "Помилка реєстрації"
   },
   "nav": {
     "home": "Головна",

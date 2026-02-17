@@ -6,12 +6,11 @@ import {
   Group,
   Title,
   Select,
-  ActionIcon,
   Button,
-  useMantineColorScheme,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { supportedLanguages } from '@/i18n'
+import { ThemeToggle } from '@/components/common'
 import { Sidebar } from './Sidebar'
 
 interface AppLayoutProps {
@@ -22,8 +21,6 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [opened, { toggle }] = useDisclosure(true)
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme()
-
   const handleLogout = () => {
     // TODO: call logout API / clear auth state
     navigate('/login', { replace: true })
@@ -60,14 +57,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               aria-label={t('common.language')}
             />
 
-            <ActionIcon
-              variant="default"
-              size="lg"
-              onClick={toggleColorScheme}
-              aria-label="Toggle color scheme"
-            >
-              {colorScheme === 'dark' ? '☀️' : '🌙'}
-            </ActionIcon>
+            <ThemeToggle />
 
             <Button variant="subtle" size="xs" color="red" onClick={handleLogout}>
               {t('auth.logout')}

@@ -9,6 +9,7 @@
     "create": "Create",
     "search": "Search",
     "loading": "Loading...",
+    "initializingCore": "Initializing Sentinel Core...",
     "error": "An error occurred",
     "success": "Success",
     "confirm": "Confirm",
@@ -54,7 +55,10 @@
     "passwordMinLength": "Password must be at least 8 characters",
     "passwordsMustMatch": "Passwords must match",
     "ssoGoogle": "Google",
-    "ssoGithub": "GitHub"
+    "ssoGithub": "GitHub",
+    "accessGranted": "Access Granted",
+    "authenticationFailed": "Authentication Failed",
+    "registrationFailed": "Registration Failed"
   },
   "nav": {
     "home": "Home",
