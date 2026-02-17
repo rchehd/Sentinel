@@ -1,13 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import {
-  AppShell,
-  Burger,
-  Group,
-  Title,
-  Select,
-  Button,
-} from '@mantine/core'
+import { AppShell, Burger, Group, Title, Select, Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { supportedLanguages } from '@/i18n'
 import { ThemeToggle } from '@/components/common'

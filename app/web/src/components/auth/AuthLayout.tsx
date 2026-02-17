@@ -15,11 +15,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <Box className={styles.wrapper}>
       {/* Header */}
-      <Group
-        justify="right"
-        p={isMobile ? 'xs' : 'md'}
-        className={styles.header}
-      >
+      <Group justify="right" p={isMobile ? 'xs' : 'md'} className={styles.header}>
         <Group gap="xs">
           <Select
             size="xs"
@@ -38,14 +34,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       </Group>
 
       {/* Main */}
-      <Box
-        w="100%"
-        maw={440}
-        mx="auto"
-        px="md"
-        py="xl"
-        className={styles.main}
-      >
+      <Box w="100%" maw={440} mx="auto" px="md" py="xl" className={styles.main}>
         {children}
       </Box>
 

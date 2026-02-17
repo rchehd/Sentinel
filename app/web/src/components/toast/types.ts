@@ -12,9 +12,19 @@ export interface ToastState {
 }
 
 export interface ToastContextValue {
-  showToast: (type: Exclude<ToastType, 'loading'>, title: string, subtitle?: string, duration?: number) => void
+  showToast: (
+    type: Exclude<ToastType, 'loading'>,
+    title: string,
+    subtitle?: string,
+    duration?: number,
+  ) => void
   startLoading: (title: string, subtitle?: string) => void
-  finishLoading: (type: Exclude<ToastType, 'loading'>, title: string, subtitle?: string, duration?: number) => void
+  finishLoading: (
+    type: Exclude<ToastType, 'loading'>,
+    title: string,
+    subtitle?: string,
+    duration?: number,
+  ) => void
   closeToast: () => void
   isLoading: boolean
 }

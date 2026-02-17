@@ -118,7 +118,13 @@ export function RegisterForm() {
   }
 
   return (
-    <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%" className="theme-transition-slow">
+    <Paper
+      radius="md"
+      p={isMobile ? 'md' : 'xl'}
+      withBorder
+      w="100%"
+      className="theme-transition-slow"
+    >
       <SentinelLogo size={48} />
       <Title order={2} ta="center" mb={4}>
         {t('auth.createAccount')}

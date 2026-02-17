@@ -31,10 +31,7 @@ export function ToastPill({ state, onClose, onMouseEnter, onMouseLeave }: ToastP
       {/* Icon area */}
       <div className={styles.iconWrapper}>
         {/* Spinner */}
-        <div
-          className={styles.spinner}
-          data-active={type === 'loading'}
-        />
+        <div className={styles.spinner} data-active={type === 'loading'} />
         {/* Success */}
         <svg
           className={cn(styles.icon, styles.iconSuccess)}
