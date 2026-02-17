@@ -1,0 +1,75 @@
+{
+  "common": {
+    "welcome": "Witamy w Sentinel",
+    "language": "Język",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "create": "Utwórz",
+    "search": "Szukaj",
+    "loading": "Ładowanie...",
+    "error": "Wystąpił błąd",
+    "success": "Sukces",
+    "confirm": "Potwierdź",
+    "back": "Wstecz",
+    "next": "Dalej",
+    "or": "Lub kontynuuj z e-mailem",
+    "required": "Wymagane"
+  },
+  "home": {
+    "description": "Twoje miejsce do tworzenia formularzy. Oto krótki przegląd.",
+    "forms": "Formularze",
+    "submissions": "Zgłoszenia",
+    "workflows": "Przepływy pracy"
+  },
+  "auth": {
+    "login": "Logowanie",
+    "logout": "Wyloguj się",
+    "register": "Rejestracja",
+    "signIn": "Zaloguj się",
+    "signUp": "Zarejestruj się",
+    "email": "E-mail",
+    "password": "Hasło",
+    "confirmPassword": "Potwierdź hasło",
+    "username": "Nazwa użytkownika",
+    "firstName": "Imię",
+    "lastName": "Nazwisko",
+    "forgotPassword": "Zapomniałeś hasła?",
+    "noAccount": "Nie masz konta?",
+    "hasAccount": "Masz już konto?",
+    "welcomeBack": "Witaj ponownie!",
+    "welcomeBackDesc": "Wprowadź dane logowania, aby uzyskać dostęp.",
+    "createAccount": "Utwórz konto",
+    "createAccountDesc": "Wypełnij poniższe dane, aby rozpocząć.",
+    "role": "Typ konta",
+    "roleSingle": "Osobiste",
+    "roleCompany": "Firma",
+    "createOrganization": "Utwórz organizację",
+    "organizationLabel": "Nazwa firmy",
+    "organizationDomain": "Domena firmy",
+    "registrationSuccess": "Rejestracja zakończona. Sprawdź e-mail, aby aktywować konto.",
+    "activationSuccess": "Konto zostało aktywowane.",
+    "activationFailed": "Nieprawidłowy token aktywacji.",
+    "passwordMinLength": "Hasło musi mieć co najmniej 8 znaków",
+    "passwordsMustMatch": "Hasła muszą się zgadzać",
+    "ssoGoogle": "Google",
+    "ssoGithub": "GitHub"
+  },
+  "nav": {
+    "home": "Strona główna",
+    "dashboard": "Panel",
+    "settings": "Ustawienia",
+    "profile": "Profil"
+  },
+  "footer": {
+    "privacy": "Polityka prywatności",
+    "terms": "Regulamin",
+    "support": "Kontakt z pomocą"
+  },
+  "errors": {
+    "invalid_credentials": "Nieprawidłowy e-mail lub hasło.",
+    "account_not_activated": "Konto nie jest aktywowane. Sprawdź swoją pocztę e-mail.",
+    "org_label_required": "Nazwa organizacji jest wymagana."
+  }
+}

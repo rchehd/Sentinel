@@ -79,6 +79,14 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
+  # PHP dev tools (CS-Fixer, PHPStan, GrumPHP) — runs from repo root
+  tools:
+    image: php:8.4-cli-alpine
+    working_dir: /project
+    profiles: ["tools"]
+    volumes:
+      - .:/project
+
 volumes:
   pgadmin_data:
   web_node_modules:

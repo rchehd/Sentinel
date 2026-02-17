@@ -7,14 +7,13 @@ framework:
             failed: 'doctrine://default?queue_name=failed'
 
         routing:
-            # Route your messages to the transports
-            # 'App\Message\YourMessage': async
+            Symfony\Component\Mailer\Messenger\SendEmailMessage: async
 
-# when@test:
-#    framework:
-#        messenger:
-#            transports:
-#                async: 'in-memory://'
+when@test:
+    framework:
+        messenger:
+            transports:
+                async: 'in-memory://'
 
 when@dev:
     framework:
