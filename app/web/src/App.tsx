@@ -14,6 +14,9 @@ const HomePage = lazy(() => import('@/pages/HomePage').then((m) => ({ default: m
 const DashboardPage = lazy(() =>
   import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })),
 )
+const RegisterCheckEmailPage = lazy(() =>
+  import('@/pages/RegisterCheckEmailPage').then((m) => ({ default: m.RegisterCheckEmailPage })),
+)
 
 function App() {
   const { t } = useTranslation()
@@ -32,6 +35,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/register/check-email" element={<RegisterCheckEmailPage />} />
             <Route path="/activate/:token" element={<ActivatePage />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/dashboard" element={<DashboardPage />} />

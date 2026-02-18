@@ -37,24 +37,25 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [orgLabel, setOrgLabel] = useState('')
   const [orgDomain, setOrgDomain] = useState('')
-  const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const clearError = (field: string) =>
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (password.length < 8) {
-      showToast('error', t('auth.passwordMinLength'))
-      return
-    }
-
-    if (password !== confirmPassword) {
-      showToast('error', t('auth.passwordsMustMatch'))
-      return
-    }
-
-    if (createOrg && !orgLabel.trim()) {
-      showToast('error', t('auth.organizationLabel'))
+    const newErrors: Record<string, string> = {}
+    if (!email) newErrors.email = t('auth.emailRequired')
+    if (!username) newErrors.username = t('auth.usernameRequired')
+    if (!password) newErrors.password = t('auth.passwordRequired')
+    else if (password.length < 8) newErrors.password = t('auth.passwordMinLength')
+    if (!confirmPassword) newErrors.confirmPassword = t('auth.confirmPasswordRequired')
+    else if (password !== confirmPassword) newErrors.confirmPassword = t('auth.passwordsMustMatch')
+    if (createOrg && !orgLabel.trim()) newErrors.orgLabel = t('auth.organizationRequired')
+    if (Object.keys(newErrors).length) {
+      setErrors(newErrors)
       return
     }
 
@@ -92,8 +93,7 @@ export function RegisterForm() {
         )
       }
 
-      showToast('success', t('common.success'), t('auth.registrationSuccess'))
-      setSuccess(true)
+      navigate('/register/check-email', { replace: true, state: { from: 'registration' } })
     } catch (err) {
       const message = err instanceof Error ? err.message : t('common.error')
       showToast('error', t('auth.registrationFailed'), message)
@@ -102,21 +102,6 @@ export function RegisterForm() {
     }
   }
 
-  if (success) {
-    return (
-      <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%">
-        <Stack ta="center" gap="md">
-          <Title order={3}>{t('common.success')}</Title>
-          <Text c="dimmed" size="sm">
-            {t('auth.registrationSuccess')}
-          </Text>
-          <Button fullWidth variant="light" onClick={() => navigate('/login')}>
-            {t('auth.signIn')}
-          </Button>
-        </Stack>
-      </Paper>
-    )
-  }
 
   return (
     <Paper
@@ -138,7 +123,7 @@ export function RegisterForm() {
 
       <Divider label={t('common.or')} labelPosition="center" my="lg" />
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <Stack>
           <TextInput
             required
@@ -146,7 +131,8 @@ export function RegisterForm() {
             placeholder="your@email.com"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.currentTarget.value)}
+            error={errors.email}
+            onChange={(e) => { setEmail(e.currentTarget.value); clearError('email') }}
           />
 
           <TextInput
@@ -154,7 +140,8 @@ export function RegisterForm() {
             label={t('auth.username')}
             placeholder={t('auth.username')}
             value={username}
-            onChange={(e) => setUsername(e.currentTarget.value)}
+            error={errors.username}
+            onChange={(e) => { setUsername(e.currentTarget.value); clearError('username') }}
           />
 
           <SimpleGrid cols={isMobile ? 1 : 2}>
@@ -172,20 +159,22 @@ export function RegisterForm() {
             />
           </SimpleGrid>
 
-          <SimpleGrid cols={isMobile ? 1 : 2}>
+          <SimpleGrid cols={1}>
             <PasswordInput
               required
               label={t('auth.password')}
               placeholder={t('auth.password')}
               value={password}
-              onChange={(e) => setPassword(e.currentTarget.value)}
+              error={errors.password}
+              onChange={(e) => { setPassword(e.currentTarget.value); clearError('password') }}
             />
             <PasswordInput
               required
               label={t('auth.confirmPassword')}
               placeholder={t('auth.confirmPassword')}
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+              error={errors.confirmPassword}
+              onChange={(e) => { setConfirmPassword(e.currentTarget.value); clearError('confirmPassword') }}
             />
           </SimpleGrid>
 
@@ -196,13 +185,14 @@ export function RegisterForm() {
           />
 
           <Collapse in={createOrg}>
-            <SimpleGrid cols={isMobile ? 1 : 2}>
+            <SimpleGrid cols={1}>
               <TextInput
                 required={createOrg}
                 label={t('auth.organizationLabel')}
                 placeholder={t('auth.organizationLabel')}
                 value={orgLabel}
-                onChange={(e) => setOrgLabel(e.currentTarget.value)}
+                error={errors.orgLabel}
+                onChange={(e) => { setOrgLabel(e.currentTarget.value); clearError('orgLabel') }}
               />
               <TextInput
                 label={t('auth.organizationDomain')}

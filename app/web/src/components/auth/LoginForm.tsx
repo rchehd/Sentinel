@@ -23,21 +23,38 @@ export function LoginForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const activated = searchParams.get('activated') === 'true'
+  const activation = searchParams.get('activation')
   const isMobile = useMediaQuery('(max-width: 480px)')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const { showToast } = useToast()
 
+  const clearError = (field: string) =>
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev))
+
   useEffect(() => {
-    if (activated) {
+    if (activation === 'success') {
       showToast('success', t('auth.activationSuccess'), '', 5000)
+    } else if (activation === 'already_activated') {
+      showToast('info', t('auth.alreadyActivated'), t('auth.alreadyActivatedDesc'), 5000)
+    } else if (activation === 'failed') {
+      showToast('error', t('auth.activationFailed'), t('auth.activationFailedDesc'), 6000)
     }
-  }, [activated, showToast, t])
+  }, [activation, showToast, t])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const newErrors: Record<string, string> = {}
+    if (!email) newErrors.email = t('auth.emailRequired')
+    if (!password) newErrors.password = t('auth.passwordRequired')
+    if (Object.keys(newErrors).length) {
+      setErrors(newErrors)
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -87,7 +104,7 @@ export function LoginForm() {
 
       <Divider label={t('common.or')} labelPosition="center" my="lg" />
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <Stack>
           <TextInput
             required
@@ -95,7 +112,8 @@ export function LoginForm() {
             placeholder="your@email.com"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.currentTarget.value)}
+            error={errors.email}
+            onChange={(e) => { setEmail(e.currentTarget.value); clearError('email') }}
           />
 
           <div>
@@ -104,7 +122,8 @@ export function LoginForm() {
               label={t('auth.password')}
               placeholder={t('auth.password')}
               value={password}
-              onChange={(e) => setPassword(e.currentTarget.value)}
+              error={errors.password}
+              onChange={(e) => { setPassword(e.currentTarget.value); clearError('password') }}
             />
             <Anchor component="button" type="button" size="xs" mt={4}>
               {t('auth.forgotPassword')}

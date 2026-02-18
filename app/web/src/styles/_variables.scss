@@ -21,3 +21,9 @@
   --pill-bg: #2c2e33;
   --pill-hover: #373a40;
 }
+
+// Keep placeholder color neutral even when input has an error
+.mantine-Input-input[data-error]::placeholder,
+.mantine-PasswordInput-innerInput::placeholder {
+  color: var(--mantine-color-placeholder);
+}

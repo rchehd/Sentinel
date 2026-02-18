@@ -37,6 +37,7 @@ export const cssVariablesResolver = (theme: MantineTheme) => {
       '--mantine-color-default-border': slate[200],  // borders + auth dot grid
       '--mantine-color-default-color':  slate[900],
       '--mantine-color-placeholder':    slate[400],
+      '--mantine-color-error':          '#ef4444',
       '--mantine-color-dark-filled':       slate[900],
       '--mantine-color-dark-filled-hover': slate[900],  // no color change on hover
     },
@@ -50,6 +51,7 @@ export const cssVariablesResolver = (theme: MantineTheme) => {
       '--mantine-color-default-border': slate[800],  // borders + auth dot grid
       '--mantine-color-default-color':  slate[50],
       '--mantine-color-placeholder':    slate[500],
+      '--mantine-color-error':          '#f87171',
       // Buttons without an explicit variant prop fall back to these CSS vars
       '--mantine-color-dark-filled':       '#ffffff',
       '--mantine-color-dark-filled-hover': '#ffffff',  // no color change — opacity+lift via CSS
@@ -118,6 +120,7 @@ export const theme = createTheme({
         root:  { transition: themeTransition },
         input: { transition: themeTransition },
         label: { transition: themeTransition },
+        error: { transition: themeTransition },
       },
     },
     PasswordInput: {
@@ -126,6 +129,7 @@ export const theme = createTheme({
         innerInput: { transition: themeTransition },
         input:      { transition: themeTransition },
         label:      { transition: themeTransition },
+        error:      { transition: themeTransition },
       },
     },
     Select: {
