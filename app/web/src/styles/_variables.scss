@@ -22,6 +22,13 @@
   --pill-hover: #373a40;
 }
 
+// Checkbox: dark theme uses black fill with white checkmark
+// (--mantine-color-dark-filled is #fff for buttons, which leaks into checkbox checked state)
+[data-mantine-color-scheme='dark'] .mantine-Checkbox-input:checked {
+  background-color: #020617;
+  border-color: #020617;
+}
+
 // Keep placeholder color neutral even when input has an error
 .mantine-Input-input[data-error]::placeholder,
 .mantine-PasswordInput-innerInput::placeholder {

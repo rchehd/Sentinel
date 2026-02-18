@@ -142,6 +142,10 @@ export const theme = createTheme({
     Checkbox: {
       styles: {
         label: { transition: themeTransition },
+        input: {
+          transition: themeTransition,
+          borderColor: `light-dark(${slate[200]}, ${slate[600]})`,
+        },
       },
     },
     Button: {
