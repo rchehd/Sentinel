@@ -77,9 +77,9 @@ export function LoginForm() {
     >
       <SentinelLogo size={48} />
       <Title order={2} ta="center" mb={4}>
-        Sentinel
+        {t('auth.welcomeBack')}
       </Title>
-      <Text c="dimmed" size="sm" ta="center" mb={8}>
+      <Text c="dimmed" size="sm" ta="center" mb={20}>
         {t('auth.welcomeBackDesc')}
       </Text>
 

@@ -11,6 +11,7 @@ import {
   Divider,
   Anchor,
   Stack,
+  SimpleGrid,
   Checkbox,
   Collapse,
 } from '@mantine/core'
@@ -156,35 +157,37 @@ export function RegisterForm() {
             onChange={(e) => setUsername(e.currentTarget.value)}
           />
 
-          <TextInput
-            label={t('auth.firstName')}
-            placeholder={t('auth.firstName')}
-            value={firstName}
-            onChange={(e) => setFirstName(e.currentTarget.value)}
-          />
+          <SimpleGrid cols={isMobile ? 1 : 2}>
+            <TextInput
+              label={t('auth.firstName')}
+              placeholder={t('auth.firstName')}
+              value={firstName}
+              onChange={(e) => setFirstName(e.currentTarget.value)}
+            />
+            <TextInput
+              label={t('auth.lastName')}
+              placeholder={t('auth.lastName')}
+              value={lastName}
+              onChange={(e) => setLastName(e.currentTarget.value)}
+            />
+          </SimpleGrid>
 
-          <TextInput
-            label={t('auth.lastName')}
-            placeholder={t('auth.lastName')}
-            value={lastName}
-            onChange={(e) => setLastName(e.currentTarget.value)}
-          />
-
-          <PasswordInput
-            required
-            label={t('auth.password')}
-            placeholder={t('auth.password')}
-            value={password}
-            onChange={(e) => setPassword(e.currentTarget.value)}
-          />
-
-          <PasswordInput
-            required
-            label={t('auth.confirmPassword')}
-            placeholder={t('auth.confirmPassword')}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.currentTarget.value)}
-          />
+          <SimpleGrid cols={isMobile ? 1 : 2}>
+            <PasswordInput
+              required
+              label={t('auth.password')}
+              placeholder={t('auth.password')}
+              value={password}
+              onChange={(e) => setPassword(e.currentTarget.value)}
+            />
+            <PasswordInput
+              required
+              label={t('auth.confirmPassword')}
+              placeholder={t('auth.confirmPassword')}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+            />
+          </SimpleGrid>
 
           <Checkbox
             label={t('auth.createOrganization')}
@@ -193,7 +196,7 @@ export function RegisterForm() {
           />
 
           <Collapse in={createOrg}>
-            <Stack gap="sm">
+            <SimpleGrid cols={isMobile ? 1 : 2}>
               <TextInput
                 required={createOrg}
                 label={t('auth.organizationLabel')}
@@ -207,7 +210,7 @@ export function RegisterForm() {
                 value={orgDomain}
                 onChange={(e) => setOrgDomain(e.currentTarget.value)}
               />
-            </Stack>
+            </SimpleGrid>
           </Collapse>
 
           <Button type="submit" fullWidth loading={loading}>

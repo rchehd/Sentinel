@@ -50,7 +50,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         maw={440}
         mx="auto"
         px="md"
-        py="xl"
+        py="sm"
         style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
       >
         {children}
