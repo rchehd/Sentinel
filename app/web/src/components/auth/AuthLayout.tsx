@@ -3,7 +3,6 @@ import { Box, Group, Select, Anchor } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { supportedLanguages } from '@/i18n'
 import { ThemeToggle } from '@/components/common'
-import styles from './AuthLayout.module.scss'
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -12,10 +11,22 @@ interface AuthLayoutProps {
 export function AuthLayout({ children }: AuthLayoutProps) {
   const { t, i18n } = useTranslation()
   const isMobile = useMediaQuery('(max-width: 480px)')
+
   return (
-    <Box className={styles.wrapper}>
+    <Box
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        backgroundImage:
+          'radial-gradient(var(--mantine-color-default-border) 1px, transparent 1px)',
+        backgroundSize: '24px 24px',
+        transition: 'background-color 0.5s ease, color 0.5s ease',
+      }}
+    >
       {/* Header */}
-      <Group justify="right" p={isMobile ? 'xs' : 'md'} className={styles.header}>
+      <Group justify="right" p={isMobile ? 'xs' : 'md'} style={{ position: 'relative', zIndex: 10 }}>
         <Group gap="xs">
           <Select
             size="xs"
@@ -34,12 +45,19 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       </Group>
 
       {/* Main */}
-      <Box w="100%" maw={440} mx="auto" px="md" py="xl" className={styles.main}>
+      <Box
+        w="100%"
+        maw={440}
+        mx="auto"
+        px="md"
+        py="xl"
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+      >
         {children}
       </Box>
 
       {/* Footer */}
-      <Group justify="center" gap="lg" pb="lg" className={styles.footer}>
+      <Group justify="center" gap="lg" pb="lg" style={{ position: 'relative', zIndex: 10 }}>
         <Anchor size="xs" c="dimmed" href="#">
           {t('footer.privacy')}
         </Anchor>

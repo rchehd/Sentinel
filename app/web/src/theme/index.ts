@@ -1,4 +1,4 @@
-import { createTheme } from '@mantine/core'
+import { createTheme, defaultVariantColorsResolver } from '@mantine/core'
 
 const themeTransition = 'background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease'
 
@@ -20,6 +20,20 @@ export const theme = createTheme({
       '#141414', // 8
       '#0f172a', // 9 - Slate 900 (matches sample --primary)
     ],
+  },
+  variantColorResolver: (input) => {
+    const defaultColors = defaultVariantColorsResolver(input)
+
+    if (input.variant === 'filled') {
+      return {
+        ...defaultColors,
+        background: 'light-dark(var(--mantine-color-dark-8), #ffffff)',
+        hover: 'light-dark(var(--mantine-color-dark-7), #f0f0f0)',
+        color: 'light-dark(#ffffff, #1e1e1e)',
+      }
+    }
+
+    return defaultColors
   },
   components: {
     Paper: {
@@ -43,14 +57,7 @@ export const theme = createTheme({
       styles: {
         root: { transition: themeTransition },
         input: { transition: themeTransition },
-        label: {
-          fontSize: '0.7rem',
-          fontWeight: 600,
-          textTransform: 'uppercase' as const,
-          letterSpacing: '0.08em',
-          fontFamily: 'var(--mantine-font-family-monospace)',
-          transition: themeTransition,
-        },
+        label: { transition: themeTransition },
       },
     },
     PasswordInput: {
@@ -58,36 +65,19 @@ export const theme = createTheme({
         root: { transition: themeTransition },
         innerInput: { transition: themeTransition },
         input: { transition: themeTransition },
-        label: {
-          fontSize: '0.7rem',
-          fontWeight: 600,
-          textTransform: 'uppercase' as const,
-          letterSpacing: '0.08em',
-          fontFamily: 'var(--mantine-font-family-monospace)',
-          transition: themeTransition,
-        },
+        label: { transition: themeTransition },
       },
     },
     Select: {
       styles: {
         root: { transition: themeTransition },
         input: { transition: themeTransition },
-        label: {
-          fontSize: '0.7rem',
-          fontWeight: 600,
-          textTransform: 'uppercase' as const,
-          letterSpacing: '0.08em',
-          fontFamily: 'var(--mantine-font-family-monospace)',
-          transition: themeTransition,
-        },
+        label: { transition: themeTransition },
       },
     },
     Checkbox: {
       styles: {
-        label: {
-          fontSize: '0.8rem',
-          transition: themeTransition,
-        },
+        label: { transition: themeTransition },
       },
     },
     Button: {

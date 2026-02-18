@@ -1,0 +1,23 @@
+:root {
+  --radius: 0.625rem;
+
+  /* Toast pill */
+  --pill-bg: #1a1b1e;
+  --pill-border: rgba(255, 255, 255, 0.1);
+  --pill-text: #ffffff;
+  --pill-subtext: #909296;
+  --pill-hover: #25262b;
+
+  /* Status colors */
+  --status-error: #ef4444;
+  --status-error-border: rgba(239, 68, 68, 0.3);
+  --status-success: #4ade80;
+  --status-success-border: rgba(74, 222, 128, 0.3);
+  --status-info: #3b82f6;
+  --status-info-border: rgba(59, 130, 246, 0.3);
+}
+
+.dark {
+  --pill-bg: #2c2e33;
+  --pill-hover: #373a40;
+}
