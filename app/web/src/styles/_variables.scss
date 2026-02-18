@@ -17,7 +17,7 @@
   --status-info-border: rgba(59, 130, 246, 0.3);
 }
 
-.dark {
+[data-mantine-color-scheme='dark'] {
   --pill-bg: #2c2e33;
   --pill-hover: #373a40;
 }

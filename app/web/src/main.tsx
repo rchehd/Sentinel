@@ -5,13 +5,13 @@ import '@mantine/core/styles.css'
 import './i18n'
 import './index.css'
 import './styles/global.scss'
-import { theme } from './theme'
+import { theme, cssVariablesResolver } from './theme'
 import { ToastProvider } from './components/toast'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
       <ToastProvider>
         <App />
       </ToastProvider>
