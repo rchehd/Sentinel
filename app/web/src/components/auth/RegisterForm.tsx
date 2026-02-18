@@ -11,12 +11,14 @@ import {
   Divider,
   Anchor,
   Stack,
+  SimpleGrid,
   Checkbox,
-  Alert,
   Collapse,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { SsoButtons } from './SsoButtons'
+import { useToast } from '@/components/toast'
+import { SentinelLogo } from '@/components/logo'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
 
@@ -24,6 +26,7 @@ export function RegisterForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const isMobile = useMediaQuery('(max-width: 480px)')
+  const { showToast } = useToast()
 
   const [createOrg, setCreateOrg] = useState(false)
   const [email, setEmail] = useState('')
@@ -34,26 +37,25 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [orgLabel, setOrgLabel] = useState('')
   const [orgDomain, setOrgDomain] = useState('')
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const clearError = (field: string) =>
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
 
-    if (password.length < 8) {
-      setError(t('auth.passwordMinLength'))
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError(t('auth.passwordsMustMatch'))
-      return
-    }
-
-    if (createOrg && !orgLabel.trim()) {
-      setError(t('auth.organizationLabel'))
+    const newErrors: Record<string, string> = {}
+    if (!email) newErrors.email = t('auth.emailRequired')
+    if (!username) newErrors.username = t('auth.usernameRequired')
+    if (!password) newErrors.password = t('auth.passwordRequired')
+    else if (password.length < 8) newErrors.password = t('auth.passwordMinLength')
+    if (!confirmPassword) newErrors.confirmPassword = t('auth.confirmPasswordRequired')
+    else if (password !== confirmPassword) newErrors.confirmPassword = t('auth.passwordsMustMatch')
+    if (createOrg && !orgLabel.trim()) newErrors.orgLabel = t('auth.organizationRequired')
+    if (Object.keys(newErrors).length) {
+      setErrors(newErrors)
       return
     }
 
@@ -91,29 +93,25 @@ export function RegisterForm() {
         )
       }
 
-      setSuccess(true)
+      navigate('/register/check-email', { replace: true, state: { from: 'registration' } })
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.error'))
+      const message = err instanceof Error ? err.message : t('common.error')
+      showToast('error', t('auth.registrationFailed'), message)
     } finally {
       setLoading(false)
     }
   }
 
-  if (success) {
-    return (
-      <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%">
-        <Alert color="green" variant="light" title={t('common.success')}>
-          {t('auth.registrationSuccess')}
-        </Alert>
-        <Button fullWidth mt="lg" variant="light" onClick={() => navigate('/login')}>
-          {t('auth.signIn')}
-        </Button>
-      </Paper>
-    )
-  }
 
   return (
-    <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%">
+    <Paper
+      radius="md"
+      p={isMobile ? 'md' : 'xl'}
+      withBorder
+      w="100%"
+      className="theme-transition-slow"
+    >
+      <SentinelLogo size={48} />
       <Title order={2} ta="center" mb={4}>
         {t('auth.createAccount')}
       </Title>
@@ -125,21 +123,16 @@ export function RegisterForm() {
 
       <Divider label={t('common.or')} labelPosition="center" my="lg" />
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <Stack>
-          {error && (
-            <Alert color="red" variant="light">
-              {error}
-            </Alert>
-          )}
-
           <TextInput
             required
             label={t('auth.email')}
             placeholder="your@email.com"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.currentTarget.value)}
+            error={errors.email}
+            onChange={(e) => { setEmail(e.currentTarget.value); clearError('email') }}
           />
 
           <TextInput
@@ -147,38 +140,43 @@ export function RegisterForm() {
             label={t('auth.username')}
             placeholder={t('auth.username')}
             value={username}
-            onChange={(e) => setUsername(e.currentTarget.value)}
+            error={errors.username}
+            onChange={(e) => { setUsername(e.currentTarget.value); clearError('username') }}
           />
 
-          <TextInput
-            label={t('auth.firstName')}
-            placeholder={t('auth.firstName')}
-            value={firstName}
-            onChange={(e) => setFirstName(e.currentTarget.value)}
-          />
+          <SimpleGrid cols={isMobile ? 1 : 2}>
+            <TextInput
+              label={t('auth.firstName')}
+              placeholder={t('auth.firstName')}
+              value={firstName}
+              onChange={(e) => setFirstName(e.currentTarget.value)}
+            />
+            <TextInput
+              label={t('auth.lastName')}
+              placeholder={t('auth.lastName')}
+              value={lastName}
+              onChange={(e) => setLastName(e.currentTarget.value)}
+            />
+          </SimpleGrid>
 
-          <TextInput
-            label={t('auth.lastName')}
-            placeholder={t('auth.lastName')}
-            value={lastName}
-            onChange={(e) => setLastName(e.currentTarget.value)}
-          />
-
-          <PasswordInput
-            required
-            label={t('auth.password')}
-            placeholder={t('auth.password')}
-            value={password}
-            onChange={(e) => setPassword(e.currentTarget.value)}
-          />
-
-          <PasswordInput
-            required
-            label={t('auth.confirmPassword')}
-            placeholder={t('auth.confirmPassword')}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.currentTarget.value)}
-          />
+          <SimpleGrid cols={1}>
+            <PasswordInput
+              required
+              label={t('auth.password')}
+              placeholder={t('auth.password')}
+              value={password}
+              error={errors.password}
+              onChange={(e) => { setPassword(e.currentTarget.value); clearError('password') }}
+            />
+            <PasswordInput
+              required
+              label={t('auth.confirmPassword')}
+              placeholder={t('auth.confirmPassword')}
+              value={confirmPassword}
+              error={errors.confirmPassword}
+              onChange={(e) => { setConfirmPassword(e.currentTarget.value); clearError('confirmPassword') }}
+            />
+          </SimpleGrid>
 
           <Checkbox
             label={t('auth.createOrganization')}
@@ -187,13 +185,14 @@ export function RegisterForm() {
           />
 
           <Collapse in={createOrg}>
-            <Stack gap="sm">
+            <SimpleGrid cols={1}>
               <TextInput
                 required={createOrg}
                 label={t('auth.organizationLabel')}
                 placeholder={t('auth.organizationLabel')}
                 value={orgLabel}
-                onChange={(e) => setOrgLabel(e.currentTarget.value)}
+                error={errors.orgLabel}
+                onChange={(e) => { setOrgLabel(e.currentTarget.value); clearError('orgLabel') }}
               />
               <TextInput
                 label={t('auth.organizationDomain')}
@@ -201,7 +200,7 @@ export function RegisterForm() {
                 value={orgDomain}
                 onChange={(e) => setOrgDomain(e.currentTarget.value)}
               />
-            </Stack>
+            </SimpleGrid>
           </Collapse>
 
           <Button type="submit" fullWidth loading={loading}>

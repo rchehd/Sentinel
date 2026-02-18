@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -11,10 +11,11 @@ import {
   Divider,
   Anchor,
   Stack,
-  Alert,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { SsoButtons } from './SsoButtons'
+import { useToast } from '@/components/toast'
+import { SentinelLogo } from '@/components/logo'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
 
@@ -22,16 +23,38 @@ export function LoginForm() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const activated = searchParams.get('activated') === 'true'
+  const activation = searchParams.get('activation')
   const isMobile = useMediaQuery('(max-width: 480px)')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const { showToast } = useToast()
+
+  const clearError = (field: string) =>
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev))
+
+  useEffect(() => {
+    if (activation === 'success') {
+      showToast('success', t('auth.activationSuccess'), '', 5000)
+    } else if (activation === 'already_activated') {
+      showToast('info', t('auth.alreadyActivated'), t('auth.alreadyActivatedDesc'), 5000)
+    } else if (activation === 'failed') {
+      showToast('error', t('auth.activationFailed'), t('auth.activationFailedDesc'), 6000)
+    }
+  }, [activation, showToast, t])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
+
+    const newErrors: Record<string, string> = {}
+    if (!email) newErrors.email = t('auth.emailRequired')
+    if (!password) newErrors.password = t('auth.passwordRequired')
+    if (Object.keys(newErrors).length) {
+      setErrors(newErrors)
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -51,20 +74,29 @@ export function LoginForm() {
         )
       }
 
-      navigate('/home', { replace: true })
+      showToast('success', t('auth.accessGranted'), t('auth.welcomeBack'))
+      setTimeout(() => navigate('/home', { replace: true }), 1500)
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.error'))
+      const message = err instanceof Error ? err.message : t('common.error')
+      showToast('error', t('auth.authenticationFailed'), message)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%">
+    <Paper
+      radius="md"
+      p={isMobile ? 'md' : 'xl'}
+      withBorder
+      w="100%"
+      className="theme-transition-slow"
+    >
+      <SentinelLogo size={48} />
       <Title order={2} ta="center" mb={4}>
         {t('auth.welcomeBack')}
       </Title>
-      <Text c="dimmed" size="sm" ta="center" mb="lg">
+      <Text c="dimmed" size="sm" ta="center" mb={20}>
         {t('auth.welcomeBackDesc')}
       </Text>
 
@@ -72,27 +104,16 @@ export function LoginForm() {
 
       <Divider label={t('common.or')} labelPosition="center" my="lg" />
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <Stack>
-          {activated && (
-            <Alert color="green" variant="light">
-              {t('auth.activationSuccess')}
-            </Alert>
-          )}
-
-          {error && (
-            <Alert color="red" variant="light">
-              {error}
-            </Alert>
-          )}
-
           <TextInput
             required
             label={t('auth.email')}
             placeholder="your@email.com"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.currentTarget.value)}
+            error={errors.email}
+            onChange={(e) => { setEmail(e.currentTarget.value); clearError('email') }}
           />
 
           <div>
@@ -101,7 +122,8 @@ export function LoginForm() {
               label={t('auth.password')}
               placeholder={t('auth.password')}
               value={password}
-              onChange={(e) => setPassword(e.currentTarget.value)}
+              error={errors.password}
+              onChange={(e) => { setPassword(e.currentTarget.value); clearError('password') }}
             />
             <Anchor component="button" type="button" size="xs" mt={4}>
               {t('auth.forgotPassword')}
