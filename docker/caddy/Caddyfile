@@ -1,6 +1,6 @@
 # Web frontend
 {$DOMAIN:sentinel.localhost} {
-	reverse_proxy web:5173
+	reverse_proxy web:80
 }
 
 # API backend (FrankenPHP)

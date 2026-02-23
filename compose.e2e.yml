@@ -1,0 +1,17 @@
+# E2E test runner — used by CI alongside compose.yml.
+# In local dev the e2e service is defined in compose.override.yml (with a shared node_modules volume).
+# Usage: COMPOSE_PROFILES=e2e docker compose -f compose.yml -f compose.e2e.yml run --rm --no-deps e2e <cmd>
+services:
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.58.2-noble
+    working_dir: /app
+    volumes:
+      - ./app/web:/app
+    depends_on:
+      - caddy
+    environment:
+      BASE_URL: https://${DOMAIN:-sentinel.localhost}
+      HOST_RESOLVER_RULES: MAP sentinel.localhost caddy,MAP api.sentinel.localhost caddy
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    profiles:
+      - e2e
