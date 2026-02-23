@@ -26,7 +26,11 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       }}
     >
       {/* Header */}
-      <Group justify="right" p={isMobile ? 'xs' : 'md'} style={{ position: 'relative', zIndex: 10 }}>
+      <Group
+        justify="right"
+        p={isMobile ? 'xs' : 'md'}
+        style={{ position: 'relative', zIndex: 10 }}
+      >
         <Group gap="xs">
           <Select
             size="xs"

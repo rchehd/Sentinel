@@ -102,7 +102,6 @@ export function RegisterForm() {
     }
   }
 
-
   return (
     <Paper
       radius="md"
@@ -132,7 +131,10 @@ export function RegisterForm() {
             type="email"
             value={email}
             error={errors.email}
-            onChange={(e) => { setEmail(e.currentTarget.value); clearError('email') }}
+            onChange={(e) => {
+              setEmail(e.currentTarget.value)
+              clearError('email')
+            }}
           />
 
           <TextInput
@@ -141,7 +143,10 @@ export function RegisterForm() {
             placeholder={t('auth.username')}
             value={username}
             error={errors.username}
-            onChange={(e) => { setUsername(e.currentTarget.value); clearError('username') }}
+            onChange={(e) => {
+              setUsername(e.currentTarget.value)
+              clearError('username')
+            }}
           />
 
           <SimpleGrid cols={isMobile ? 1 : 2}>
@@ -166,7 +171,10 @@ export function RegisterForm() {
               placeholder={t('auth.password')}
               value={password}
               error={errors.password}
-              onChange={(e) => { setPassword(e.currentTarget.value); clearError('password') }}
+              onChange={(e) => {
+                setPassword(e.currentTarget.value)
+                clearError('password')
+              }}
             />
             <PasswordInput
               required
@@ -174,7 +182,10 @@ export function RegisterForm() {
               placeholder={t('auth.confirmPassword')}
               value={confirmPassword}
               error={errors.confirmPassword}
-              onChange={(e) => { setConfirmPassword(e.currentTarget.value); clearError('confirmPassword') }}
+              onChange={(e) => {
+                setConfirmPassword(e.currentTarget.value)
+                clearError('confirmPassword')
+              }}
             />
           </SimpleGrid>
 
@@ -192,7 +203,10 @@ export function RegisterForm() {
                 placeholder={t('auth.organizationLabel')}
                 value={orgLabel}
                 error={errors.orgLabel}
-                onChange={(e) => { setOrgLabel(e.currentTarget.value); clearError('orgLabel') }}
+                onChange={(e) => {
+                  setOrgLabel(e.currentTarget.value)
+                  clearError('orgLabel')
+                }}
               />
               <TextInput
                 label={t('auth.organizationDomain')}

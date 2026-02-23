@@ -9,7 +9,7 @@ const themeTransition = 'background-color 0.5s ease, color 0.5s ease, border-col
 
 // Tailwind Slate palette — matches the design prototype
 const slate = {
-  50:  '#f8fafc',
+  50: '#f8fafc',
   100: '#f1f5f9',
   200: '#e2e8f0',
   300: '#cbd5e1',
@@ -29,32 +29,32 @@ export const cssVariablesResolver = (theme: MantineTheme) => {
     ...defaults,
     light: {
       ...defaults.light,
-      '--mantine-color-body':           slate[50],   // page background
-      '--mantine-color-text':           slate[900],
-      '--mantine-color-dimmed':         slate[500],
-      '--mantine-color-default':        '#ffffff',   // input / default element bg
-      '--mantine-color-default-hover':  slate[100],
-      '--mantine-color-default-border': slate[200],  // borders + auth dot grid
-      '--mantine-color-default-color':  slate[900],
-      '--mantine-color-placeholder':    slate[400],
-      '--mantine-color-error':          '#ef4444',
-      '--mantine-color-dark-filled':       slate[900],
-      '--mantine-color-dark-filled-hover': slate[900],  // no color change on hover
+      '--mantine-color-body': slate[50], // page background
+      '--mantine-color-text': slate[900],
+      '--mantine-color-dimmed': slate[500],
+      '--mantine-color-default': '#ffffff', // input / default element bg
+      '--mantine-color-default-hover': slate[100],
+      '--mantine-color-default-border': slate[200], // borders + auth dot grid
+      '--mantine-color-default-color': slate[900],
+      '--mantine-color-placeholder': slate[400],
+      '--mantine-color-error': '#ef4444',
+      '--mantine-color-dark-filled': slate[900],
+      '--mantine-color-dark-filled-hover': slate[900], // no color change on hover
     },
     dark: {
       ...defaults.dark,
-      '--mantine-color-body':           slate[950],  // page background
-      '--mantine-color-text':           slate[50],
-      '--mantine-color-dimmed':         slate[400],
-      '--mantine-color-default':        slate[800],  // input / default element bg
-      '--mantine-color-default-hover':  slate[700],
-      '--mantine-color-default-border': slate[800],  // borders + auth dot grid
-      '--mantine-color-default-color':  slate[50],
-      '--mantine-color-placeholder':    slate[500],
-      '--mantine-color-error':          '#f87171',
+      '--mantine-color-body': slate[950], // page background
+      '--mantine-color-text': slate[50],
+      '--mantine-color-dimmed': slate[400],
+      '--mantine-color-default': slate[800], // input / default element bg
+      '--mantine-color-default-hover': slate[700],
+      '--mantine-color-default-border': slate[800], // borders + auth dot grid
+      '--mantine-color-default-color': slate[50],
+      '--mantine-color-placeholder': slate[500],
+      '--mantine-color-error': '#f87171',
       // Buttons without an explicit variant prop fall back to these CSS vars
-      '--mantine-color-dark-filled':       '#ffffff',
-      '--mantine-color-dark-filled-hover': '#ffffff',  // no color change — opacity+lift via CSS
+      '--mantine-color-dark-filled': '#ffffff',
+      '--mantine-color-dark-filled-hover': '#ffffff', // no color change — opacity+lift via CSS
     },
   }
 }
@@ -87,8 +87,8 @@ export const theme = createTheme({
       return {
         ...defaultColors,
         background: `light-dark(${slate[900]}, #ffffff)`,
-        hover:      `light-dark(${slate[900]}, #ffffff)`,  // no color change — opacity+lift via CSS
-        color:      `light-dark(#ffffff, ${slate[900]})`,
+        hover: `light-dark(${slate[900]}, #ffffff)`, // no color change — opacity+lift via CSS
+        color: `light-dark(#ffffff, ${slate[900]})`,
       }
     }
 
@@ -110,14 +110,14 @@ export const theme = createTheme({
     },
     AppShell: {
       styles: {
-        main:   { transition: themeTransition },
+        main: { transition: themeTransition },
         header: { transition: themeTransition },
         navbar: { transition: themeTransition },
       },
     },
     TextInput: {
       styles: {
-        root:  { transition: themeTransition },
+        root: { transition: themeTransition },
         input: { transition: themeTransition },
         label: { transition: themeTransition },
         error: { transition: themeTransition },
@@ -125,16 +125,16 @@ export const theme = createTheme({
     },
     PasswordInput: {
       styles: {
-        root:       { transition: themeTransition },
+        root: { transition: themeTransition },
         innerInput: { transition: themeTransition },
-        input:      { transition: themeTransition },
-        label:      { transition: themeTransition },
-        error:      { transition: themeTransition },
+        input: { transition: themeTransition },
+        label: { transition: themeTransition },
+        error: { transition: themeTransition },
       },
     },
     Select: {
       styles: {
-        root:  { transition: themeTransition },
+        root: { transition: themeTransition },
         input: { transition: themeTransition },
         label: { transition: themeTransition },
       },

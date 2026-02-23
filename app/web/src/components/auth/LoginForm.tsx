@@ -113,7 +113,10 @@ export function LoginForm() {
             type="email"
             value={email}
             error={errors.email}
-            onChange={(e) => { setEmail(e.currentTarget.value); clearError('email') }}
+            onChange={(e) => {
+              setEmail(e.currentTarget.value)
+              clearError('email')
+            }}
           />
 
           <div>
@@ -123,7 +126,10 @@ export function LoginForm() {
               placeholder={t('auth.password')}
               value={password}
               error={errors.password}
-              onChange={(e) => { setPassword(e.currentTarget.value); clearError('password') }}
+              onChange={(e) => {
+                setPassword(e.currentTarget.value)
+                clearError('password')
+              }}
             />
             <Anchor component="button" type="button" size="xs" mt={4}>
               {t('auth.forgotPassword')}

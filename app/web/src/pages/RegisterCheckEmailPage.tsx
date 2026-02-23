@@ -23,7 +23,13 @@ export function RegisterCheckEmailPage() {
 
   return (
     <AuthLayout>
-      <Paper radius="md" p={isMobile ? 'md' : 'xl'} withBorder w="100%" className="theme-transition-slow">
+      <Paper
+        radius="md"
+        p={isMobile ? 'md' : 'xl'}
+        withBorder
+        w="100%"
+        className="theme-transition-slow"
+      >
         <Stack ta="center" gap="md">
           <Mail size={48} style={{ margin: '0 auto' }} />
           <Title order={3}>{t('auth.checkEmail')}</Title>
