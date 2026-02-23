@@ -1,38 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Center, Loader, Text } from '@mantine/core'
-import { useTranslation } from 'react-i18next'
+import { Center, Loader } from '@mantine/core'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
 
 export function ActivatePage() {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
-  const { t } = useTranslation()
-  const [error, setError] = useState('')
+  // Prevents double API call in React StrictMode (effects run twice in dev).
+  // The activation token is one-time-use, so a second fetch would see 409.
+  const didFetch = useRef(false)
 
   useEffect(() => {
-    if (!token) return
+    if (!token || didFetch.current) return
+    didFetch.current = true
 
     fetch(`${API_URL}/api/activate/${token}`)
-      .then((res) => {
+      .then(async (res) => {
+        if (res.status === 409) {
+          navigate('/login?activation=already_activated', { replace: true })
+          return
+        }
         if (!res.ok) throw new Error()
-        navigate('/login?activated=true', { replace: true })
+        navigate('/login?activation=success', { replace: true })
       })
       .catch(() => {
-        setError(t('auth.activationFailed'))
+        navigate('/login?activation=failed', { replace: true })
       })
-  }, [token, navigate, t])
-
-  if (error) {
-    return (
-      <Center mih="100vh">
-        <Text c="red" fw={500}>
-          {error}
-        </Text>
-      </Center>
-    )
-  }
+  }, [token, navigate])
 
   return (
     <Center mih="100vh">

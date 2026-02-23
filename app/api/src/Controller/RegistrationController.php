@@ -89,8 +89,14 @@ class RegistrationController extends AbstractController
             );
         }
 
+        if ($user->isActive()) {
+            return $this->json(
+                ['code' => 'already_activated', 'error' => 'Account is already activated.'],
+                Response::HTTP_CONFLICT,
+            );
+        }
+
         $user->setIsActive(true);
-        $user->setActivationToken(null);
         $this->em->flush();
 
         return $this->json(['message' => 'Account activated successfully.']);

@@ -1,0 +1,70 @@
+@keyframes auth-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-shake {
+  10%,
+  90% {
+    transform: translateX(calc(-50% - 1px)) translateY(0);
+  }
+  20%,
+  80% {
+    transform: translateX(calc(-50% + 2px)) translateY(0);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(calc(-50% - 4px)) translateY(0);
+  }
+  40%,
+  60% {
+    transform: translateX(calc(-50% + 4px)) translateY(0);
+  }
+}
+
+@keyframes orbit-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit-spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes pulse-logo {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -118,16 +118,18 @@ clean: ## Clean all data (⚠️ DESTRUCTIVE)
 # === Code Quality ===
 
 .PHONY: lint
-lint: ## Run all linters (PHP-CS-Fixer, PHPStan, ESLint, TypeScript)
+lint: ## Run all linters (PHP-CS-Fixer, PHPStan, ESLint, TypeScript, Prettier)
 	docker compose run --rm -T tools php vendor/bin/php-cs-fixer fix --dry-run --diff
 	docker compose run --rm -T tools php vendor/bin/phpstan analyse --no-progress --memory-limit=256M
 	docker compose exec -T web npx eslint src --quiet
 	docker compose exec -T web npx tsc --noEmit
+	docker compose exec -T web npx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css}"
 
 .PHONY: fix
-fix: ## Auto-fix code style (PHP-CS-Fixer, ESLint)
+fix: ## Auto-fix code style (PHP-CS-Fixer, ESLint, Prettier)
 	docker compose run --rm -T tools php vendor/bin/php-cs-fixer fix
 	docker compose exec -T web npx eslint src --fix
+	docker compose exec -T web npx prettier --write "src/**/*.{ts,tsx,js,jsx,json,css}"
 
 # === IDE Support ===
 

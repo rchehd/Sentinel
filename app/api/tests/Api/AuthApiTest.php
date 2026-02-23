@@ -170,6 +170,38 @@ class AuthApiTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
+    public function testActivateAlreadyActivatedAccount(): void
+    {
+        $client = static::createClient();
+        $uid = uniqid();
+
+        // Register
+        $client->request('POST', '/api/register', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], (string) json_encode([
+            'email' => "already-{$uid}@example.com",
+            'username' => "already-{$uid}",
+            'password' => 'TestPassword123!',
+            'role' => 'ROLE_USER',
+        ]));
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $em->getRepository(User::class)->findOneBy(['email' => "already-{$uid}@example.com"]);
+        $token = $user->getActivationToken();
+
+        // First activation — should succeed
+        $client->request('GET', "/api/activate/{$token}");
+        $this->assertResponseIsSuccessful();
+
+        // Second activation with same token — should return 409
+        $client->request('GET', "/api/activate/{$token}");
+        $this->assertResponseStatusCodeSame(Response::HTTP_CONFLICT);
+
+        $data = json_decode((string) $client->getResponse()->getContent(), true);
+        $this->assertSame('already_activated', $data['code']);
+    }
+
     public function testLoginResponseContainsUserData(): void
     {
         $client = static::createClient();
