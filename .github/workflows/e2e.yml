@@ -32,11 +32,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Add hosts entries
+        run: echo "127.0.0.1 sentinel.localhost api.sentinel.localhost" | sudo tee -a /etc/hosts
+
       - name: Build and start services
         run: docker compose -f compose.yml up -d --build
 
       - name: Wait for web to be reachable through Caddy
-        run: timeout 60 sh -c 'until curl -k -sf https://localhost > /dev/null 2>&1; do sleep 3; done'
+        run: timeout 90 sh -c 'until curl -k -sf https://sentinel.localhost > /dev/null 2>&1; do sleep 3; done'
 
       - name: Run E2E tests
         run: |
