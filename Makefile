@@ -131,6 +131,14 @@ fix: ## Auto-fix code style (PHP-CS-Fixer, ESLint, Prettier)
 	docker compose exec -T web npx eslint src --fix
 	docker compose exec -T web npx prettier --write "src/**/*.{ts,tsx,js,jsx,json,css}"
 
+.PHONY: e2e-test
+e2e-test: ## Run E2E tests (Playwright, headless)
+	COMPOSE_PROFILES=e2e docker compose run --rm e2e sh -c "npx bddgen && npx playwright test"
+
+.PHONY: e2e-report
+e2e-report: ## Open Playwright HTML report on :9323
+	COMPOSE_PROFILES=e2e docker compose run --rm -p 9323:9323 e2e sh -c "npx bddgen && npx playwright show-report --host 0.0.0.0"
+
 # === IDE Support ===
 
 .PHONY: ide-sync
