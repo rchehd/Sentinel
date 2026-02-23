@@ -20,6 +20,8 @@ export default defineConfig({
     baseURL: process.env.BASE_URL ?? 'https://sentinel.localhost',
     ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
+    screenshot: (process.env.PW_SCREENSHOT as 'on' | 'only-on-failure' | 'off') ?? 'only-on-failure',
+    video: (process.env.PW_VIDEO as 'on' | 'retain-on-failure' | 'off') ?? 'retain-on-failure',
     launchOptions: {
       args: resolverRules ? [`--host-resolver-rules=${resolverRules}`] : [],
     },

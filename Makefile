@@ -135,6 +135,10 @@ fix: ## Auto-fix code style (PHP-CS-Fixer, ESLint, Prettier)
 e2e-test: ## Run E2E tests (Playwright, headless)
 	COMPOSE_PROFILES=e2e docker compose run --rm e2e sh -c "npx bddgen && npx playwright test"
 
+.PHONY: e2e-test-debug
+e2e-test-debug: ## Run E2E tests with screenshots and video for every test
+	COMPOSE_PROFILES=e2e docker compose run --rm -e PW_SCREENSHOT=on -e PW_VIDEO=on e2e sh -c "npx bddgen && npx playwright test"
+
 .PHONY: e2e-report
 e2e-report: ## Open Playwright HTML report on :9323
 	COMPOSE_PROFILES=e2e docker compose run --rm -p 9323:9323 e2e sh -c "npx bddgen && npx playwright show-report --host 0.0.0.0"
