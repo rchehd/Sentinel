@@ -34,6 +34,7 @@ class LoginController extends AbstractController
             'email' => $user->getEmail(),
             'username' => $user->getUsername(),
             'roles' => $user->getRoles(),
+            'mustChangePassword' => $user->isMustChangePassword(),
         ]);
     }
 }

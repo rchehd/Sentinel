@@ -6,8 +6,6 @@ namespace App\Enum;
 
 enum UserRole: string
 {
-    case User = 'ROLE_USER';
-    case OrgMember = 'ROLE_ORG_MEMBER';
-    case OrgOwner = 'ROLE_ORG_OWNER';
+    case User       = 'ROLE_USER';
     case SuperAdmin = 'ROLE_SUPER_ADMIN';
 }

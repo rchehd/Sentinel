@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Dto\RegistrationRequest;
-use App\Entity\Organization;
 use App\Entity\User;
+use App\Entity\Workspace;
+use App\Entity\WorkspaceMember;
 use App\Enum\UserRole;
+use App\Enum\WorkspaceRole;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -32,28 +34,12 @@ class RegistrationController extends AbstractController
     #[Route('/api/register', name: 'api_register', methods: ['POST'])]
     public function register(#[MapRequestPayload] RegistrationRequest $dto): JsonResponse
     {
-        $organization = null;
-
-        if ($dto->role === UserRole::OrgOwner->value) {
-            if (empty($dto->organizationLabel)) {
-                return $this->json(
-                    ['code' => 'org_label_required', 'error' => 'Organization label is required for company admin registration.'],
-                    Response::HTTP_UNPROCESSABLE_ENTITY,
-                );
-            }
-
-            $organization = new Organization();
-            $organization->setLabel($dto->organizationLabel);
-            $organization->setDomain($dto->organizationDomain);
-            $this->em->persist($organization);
-        }
-
         $user = new User();
         $user->setEmail($dto->email);
         $user->setUsername($dto->username);
         $user->setFirstName($dto->firstName);
         $user->setLastName($dto->lastName);
-        $user->setRoles([$dto->role]);
+        $user->setRoles([UserRole::User->value]);
         $user->setIsActive(false);
 
         $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->password);
@@ -62,11 +48,16 @@ class RegistrationController extends AbstractController
         $activationToken = bin2hex(random_bytes(32));
         $user->setActivationToken($activationToken);
 
-        if (null !== $organization) {
-            $user->setOrganization($organization);
-        }
+        $workspace = new Workspace();
+        $workspace->setName(\sprintf("%s's workspace", $dto->username));
+
+        $member = new WorkspaceMember();
+        $member->setUser($user);
+        $member->setRole(WorkspaceRole::Owner);
+        $workspace->addMember($member);
 
         $this->em->persist($user);
+        $this->em->persist($workspace);
         $this->em->flush();
 
         $this->sendActivationEmail($user, $activationToken);

@@ -69,7 +69,26 @@
     "ssoGithub": "GitHub",
     "accessGranted": "Доступ надано",
     "authenticationFailed": "Помилка автентифікації",
-    "registrationFailed": "Помилка реєстрації"
+    "registrationFailed": "Помилка реєстрації",
+    "changePassword": "Встановити новий пароль",
+    "changePasswordDesc": "Для доступу до облікового запису потрібно встановити новий пароль.",
+    "newPassword": "Новий пароль",
+    "passwordChanged": "Пароль оновлено",
+    "changePasswordSuccess": "Ваш новий пароль збережено.",
+    "changePasswordFailed": "Не вдалося оновити пароль",
+    "setPassword": "Встановити пароль"
+  },
+  "admin": {
+    "users": "Користувачі",
+    "createUser": "Створити користувача",
+    "generatePassword": "Згенерувати пароль",
+    "requirePasswordChange": "Вимагати зміни пароля при першому вході",
+    "userCreated": "Користувача створено",
+    "userCreatedDesc": "Обліковий запис успішно створено.",
+    "generatedPassword": "Згенерований пароль — поділіться ним з користувачем:",
+    "copyPassword": "Копіювати",
+    "copiedPassword": "Скопійовано!",
+    "noUsers": "Користувачів ще немає."
   },
   "nav": {
     "home": "Головна",
@@ -85,6 +104,9 @@
   "errors": {
     "invalid_credentials": "Невірна електронна пошта або пароль.",
     "account_not_activated": "Обліковий запис не активовано. Перевірте електронну пошту.",
-    "org_label_required": "Назва організації обов'язкова."
+    "org_label_required": "Назва організації обов'язкова.",
+    "password_mismatch": "Паролі не збігаються.",
+    "invalid_current_password": "Поточний пароль невірний.",
+    "current_password_required": "Потрібно ввести поточний пароль."
   }
 }

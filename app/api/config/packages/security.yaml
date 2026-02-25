@@ -23,17 +23,16 @@ security:
                 username_path: email
                 password_path: password
                 failure_handler: App\Security\LoginFailureHandler
-            stateless: true
+            stateless: false
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/admin, roles: ROLE_SUPER_ADMIN }
+        - { path: ^/api/password, roles: ROLE_USER }
+        - { path: ^/api/workspaces, roles: ROLE_USER }
 
     role_hierarchy:
-        ROLE_ORG_MEMBER: ROLE_USER
-        ROLE_ORG_OWNER: ROLE_ORG_MEMBER
-        ROLE_SUPER_ADMIN: ROLE_ORG_OWNER
+        ROLE_SUPER_ADMIN: ROLE_USER
 
 when@test:
     security:

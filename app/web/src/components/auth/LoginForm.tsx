@@ -16,6 +16,7 @@ import { useMediaQuery } from '@mantine/hooks'
 import { SsoButtons } from './SsoButtons'
 import { useToast } from '@/components/toast'
 import { SentinelLogo } from '@/components/logo'
+import { useModeContext } from '@/context/ModeContext'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
 
@@ -30,6 +31,8 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { showToast } = useToast()
+  const { mode } = useModeContext()
+  const isSelfHosted = mode === 'self_hosted'
 
   const clearError = (field: string) =>
     setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev))
@@ -60,6 +63,7 @@ export function LoginForm() {
     try {
       const res = await fetch(`${API_URL}/api/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
@@ -72,6 +76,13 @@ export function LoginForm() {
             ? t(`errors.${code}`)
             : data.error || t('common.error'),
         )
+      }
+
+      const data = await res.json()
+
+      if (data.mustChangePassword) {
+        navigate('/change-password', { replace: true })
+        return
       }
 
       showToast('success', t('auth.accessGranted'), t('auth.welcomeBack'))
@@ -100,9 +111,12 @@ export function LoginForm() {
         {t('auth.welcomeBackDesc')}
       </Text>
 
-      <SsoButtons googleLabel={t('auth.ssoGoogle')} githubLabel={t('auth.ssoGithub')} />
-
-      <Divider label={t('common.or')} labelPosition="center" my="lg" />
+      {!isSelfHosted && (
+        <>
+          <SsoButtons googleLabel={t('auth.ssoGoogle')} githubLabel={t('auth.ssoGithub')} />
+          <Divider label={t('common.or')} labelPosition="center" my="lg" />
+        </>
+      )}
 
       <form onSubmit={handleSubmit} noValidate>
         <Stack>
@@ -142,12 +156,14 @@ export function LoginForm() {
         </Stack>
       </form>
 
-      <Text c="dimmed" size="sm" ta="center" mt="md">
-        {t('auth.noAccount')}{' '}
-        <Anchor component="button" type="button" fw={600} onClick={() => navigate('/register')}>
-          {t('auth.signUp')}
-        </Anchor>
-      </Text>
+      {!isSelfHosted && (
+        <Text c="dimmed" size="sm" ta="center" mt="md">
+          {t('auth.noAccount')}{' '}
+          <Anchor component="button" type="button" fw={600} onClick={() => navigate('/register')}>
+            {t('auth.signUp')}
+          </Anchor>
+        </Text>
+      )}
     </Paper>
   )
 }

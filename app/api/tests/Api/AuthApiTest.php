@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Tests\Api;
 
 use App\Entity\User;
+use App\Enum\WorkspaceRole;
+use App\Repository\WorkspaceMemberRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,7 +24,6 @@ class AuthApiTest extends WebTestCase
             'email' => "auth-{$uid}@example.com",
             'username' => "auth-{$uid}",
             'password' => 'TestPassword123!',
-            'role' => 'ROLE_USER',
         ]));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -31,7 +32,7 @@ class AuthApiTest extends WebTestCase
         $this->assertArrayHasKey('message', $data);
     }
 
-    public function testRegisterWithOrganization(): void
+    public function testRegisterCreatesWorkspaceMembership(): void
     {
         $client = static::createClient();
         $uid = uniqid();
@@ -39,34 +40,50 @@ class AuthApiTest extends WebTestCase
         $client->request('POST', '/api/register', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], (string) json_encode([
-            'email' => "orgauth-{$uid}@example.com",
-            'username' => "orgauth-{$uid}",
+            'email' => "ws-{$uid}@example.com",
+            'username' => "ws-{$uid}",
             'password' => 'TestPassword123!',
-            'role' => 'ROLE_ORG_OWNER',
-            'organizationLabel' => "Org {$uid}",
         ]));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $em->getRepository(User::class)->findOneBy(['email' => "ws-{$uid}@example.com"]);
+        $this->assertNotNull($user);
+
+        /** @var WorkspaceMemberRepository $memberRepo */
+        $memberRepo = static::getContainer()->get(WorkspaceMemberRepository::class);
+        $members = $memberRepo->findBy(['user' => $user]);
+
+        $this->assertCount(1, $members);
+        $this->assertSame(WorkspaceRole::Owner, $members[0]->getRole());
+        $this->assertSame("ws-{$uid}'s workspace", $members[0]->getWorkspace()?->getName());
     }
 
-    public function testRegisterOrgOwnerWithoutLabelFails(): void
+    public function testRegistrationDisabledInSelfHostedMode(): void
     {
+        $_ENV['APP_MODE'] = 'self_hosted';
+        static::ensureKernelShutdown();
         $client = static::createClient();
         $uid = uniqid();
 
         $client->request('POST', '/api/register', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], (string) json_encode([
-            'email' => "nolabel-{$uid}@example.com",
-            'username' => "nolabel-{$uid}",
+            'email' => "blocked-{$uid}@example.com",
+            'username' => "blocked-{$uid}",
             'password' => 'TestPassword123!',
-            'role' => 'ROLE_ORG_OWNER',
         ]));
 
-        $this->assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
 
         $data = json_decode((string) $client->getResponse()->getContent(), true);
-        $this->assertSame('org_label_required', $data['code']);
+        $this->assertSame('registration_disabled', $data['code']);
+
+        // Restore
+        $_ENV['APP_MODE'] = 'saas';
+        static::ensureKernelShutdown();
     }
 
     public function testLoginWithInvalidCredentials(): void
@@ -91,19 +108,16 @@ class AuthApiTest extends WebTestCase
         $client = static::createClient();
         $uid = uniqid();
 
-        // Register (account is inactive by default)
         $client->request('POST', '/api/register', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], (string) json_encode([
             'email' => "inactive-{$uid}@example.com",
             'username' => "inactive-{$uid}",
             'password' => 'TestPassword123!',
-            'role' => 'ROLE_USER',
         ]));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
 
-        // Try to login
         $client->request('POST', '/api/login', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], (string) json_encode([
@@ -122,19 +136,16 @@ class AuthApiTest extends WebTestCase
         $client = static::createClient();
         $uid = uniqid();
 
-        // Register
         $client->request('POST', '/api/register', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], (string) json_encode([
             'email' => "activate-{$uid}@example.com",
             'username' => "activate-{$uid}",
             'password' => 'TestPassword123!',
-            'role' => 'ROLE_USER',
         ]));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
 
-        // Get activation token from DB
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $user = $em->getRepository(User::class)->findOneBy(['email' => "activate-{$uid}@example.com"]);
@@ -142,11 +153,9 @@ class AuthApiTest extends WebTestCase
         $token = $user->getActivationToken();
         $this->assertNotNull($token);
 
-        // Activate
         $client->request('GET', "/api/activate/{$token}");
         $this->assertResponseIsSuccessful();
 
-        // Login should now succeed
         $client->request('POST', '/api/login', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], (string) json_encode([
@@ -175,14 +184,12 @@ class AuthApiTest extends WebTestCase
         $client = static::createClient();
         $uid = uniqid();
 
-        // Register
         $client->request('POST', '/api/register', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], (string) json_encode([
             'email' => "already-{$uid}@example.com",
             'username' => "already-{$uid}",
             'password' => 'TestPassword123!',
-            'role' => 'ROLE_USER',
         ]));
 
         /** @var EntityManagerInterface $em */
@@ -190,11 +197,9 @@ class AuthApiTest extends WebTestCase
         $user = $em->getRepository(User::class)->findOneBy(['email' => "already-{$uid}@example.com"]);
         $token = $user->getActivationToken();
 
-        // First activation — should succeed
         $client->request('GET', "/api/activate/{$token}");
         $this->assertResponseIsSuccessful();
 
-        // Second activation with same token — should return 409
         $client->request('GET', "/api/activate/{$token}");
         $this->assertResponseStatusCodeSame(Response::HTTP_CONFLICT);
 
@@ -207,14 +212,12 @@ class AuthApiTest extends WebTestCase
         $client = static::createClient();
         $uid = uniqid();
 
-        // Register + activate
         $client->request('POST', '/api/register', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], (string) json_encode([
             'email' => "data-{$uid}@example.com",
             'username' => "data-{$uid}",
             'password' => 'TestPassword123!',
-            'role' => 'ROLE_USER',
         ]));
 
         /** @var EntityManagerInterface $em */
@@ -222,7 +225,6 @@ class AuthApiTest extends WebTestCase
         $user = $em->getRepository(User::class)->findOneBy(['email' => "data-{$uid}@example.com"]);
         $client->request('GET', '/api/activate/' . $user->getActivationToken());
 
-        // Login
         $client->request('POST', '/api/login', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], (string) json_encode([
@@ -237,7 +239,20 @@ class AuthApiTest extends WebTestCase
         $this->assertArrayHasKey('email', $data);
         $this->assertArrayHasKey('username', $data);
         $this->assertArrayHasKey('roles', $data);
-        // Password must not be in response
         $this->assertArrayNotHasKey('password', $data);
+    }
+
+    public function testSetupStatusReturnsMode(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/api/setup/status');
+
+        $this->assertResponseIsSuccessful();
+
+        $data = json_decode((string) $client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('configured', $data);
+        $this->assertArrayHasKey('mode', $data);
+        $this->assertSame('saas', $data['mode']);
     }
 }

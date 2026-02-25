@@ -12,8 +12,6 @@ import {
   Anchor,
   Stack,
   SimpleGrid,
-  Checkbox,
-  Collapse,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { SsoButtons } from './SsoButtons'
@@ -28,15 +26,12 @@ export function RegisterForm() {
   const isMobile = useMediaQuery('(max-width: 480px)')
   const { showToast } = useToast()
 
-  const [createOrg, setCreateOrg] = useState(false)
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [orgLabel, setOrgLabel] = useState('')
-  const [orgDomain, setOrgDomain] = useState('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -53,7 +48,6 @@ export function RegisterForm() {
     else if (password.length < 8) newErrors.password = t('auth.passwordMinLength')
     if (!confirmPassword) newErrors.confirmPassword = t('auth.confirmPasswordRequired')
     else if (password !== confirmPassword) newErrors.confirmPassword = t('auth.passwordsMustMatch')
-    if (createOrg && !orgLabel.trim()) newErrors.orgLabel = t('auth.organizationRequired')
     if (Object.keys(newErrors).length) {
       setErrors(newErrors)
       return
@@ -62,25 +56,16 @@ export function RegisterForm() {
     setLoading(true)
 
     try {
-      const role = createOrg ? 'ROLE_ORG_OWNER' : 'ROLE_USER'
-      const body: Record<string, string | null> = {
-        email,
-        username,
-        password,
-        firstName: firstName || null,
-        lastName: lastName || null,
-        role,
-      }
-
-      if (createOrg) {
-        body.organizationLabel = orgLabel
-        body.organizationDomain = orgDomain || null
-      }
-
       const res = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          email,
+          username,
+          password,
+          firstName: firstName || null,
+          lastName: lastName || null,
+        }),
       })
 
       if (!res.ok) {
@@ -164,58 +149,29 @@ export function RegisterForm() {
             />
           </SimpleGrid>
 
-          <SimpleGrid cols={1}>
-            <PasswordInput
-              required
-              label={t('auth.password')}
-              placeholder={t('auth.password')}
-              value={password}
-              error={errors.password}
-              onChange={(e) => {
-                setPassword(e.currentTarget.value)
-                clearError('password')
-              }}
-            />
-            <PasswordInput
-              required
-              label={t('auth.confirmPassword')}
-              placeholder={t('auth.confirmPassword')}
-              value={confirmPassword}
-              error={errors.confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.currentTarget.value)
-                clearError('confirmPassword')
-              }}
-            />
-          </SimpleGrid>
-
-          <Checkbox
-            label={t('auth.createOrganization')}
-            checked={createOrg}
-            onChange={(e) => setCreateOrg(e.currentTarget.checked)}
+          <PasswordInput
+            required
+            label={t('auth.password')}
+            placeholder={t('auth.password')}
+            value={password}
+            error={errors.password}
+            onChange={(e) => {
+              setPassword(e.currentTarget.value)
+              clearError('password')
+            }}
           />
 
-          <Collapse in={createOrg}>
-            <SimpleGrid cols={1}>
-              <TextInput
-                required={createOrg}
-                label={t('auth.organizationLabel')}
-                placeholder={t('auth.organizationLabel')}
-                value={orgLabel}
-                error={errors.orgLabel}
-                onChange={(e) => {
-                  setOrgLabel(e.currentTarget.value)
-                  clearError('orgLabel')
-                }}
-              />
-              <TextInput
-                label={t('auth.organizationDomain')}
-                placeholder="example.com"
-                value={orgDomain}
-                onChange={(e) => setOrgDomain(e.currentTarget.value)}
-              />
-            </SimpleGrid>
-          </Collapse>
+          <PasswordInput
+            required
+            label={t('auth.confirmPassword')}
+            placeholder={t('auth.confirmPassword')}
+            value={confirmPassword}
+            error={errors.confirmPassword}
+            onChange={(e) => {
+              setConfirmPassword(e.currentTarget.value)
+              clearError('confirmPassword')
+            }}
+          />
 
           <Button type="submit" fullWidth loading={loading}>
             {t('auth.signUp')}

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Entity;
 
-use App\Entity\Organization;
 use App\Entity\User;
+use App\Entity\Workspace;
+use App\Entity\WorkspaceMember;
 use App\Enum\UserRole;
+use App\Enum\WorkspaceRole;
 use PHPUnit\Framework\TestCase;
 
 class UserTest extends TestCase
@@ -42,10 +44,10 @@ class UserTest extends TestCase
     public function testSetRoles(): void
     {
         $user = new User();
-        $user->setRoles([UserRole::OrgOwner->value]);
+        $user->setRoles([UserRole::SuperAdmin->value]);
 
         $roles = $user->getRoles();
-        $this->assertContains(UserRole::OrgOwner->value, $roles);
+        $this->assertContains(UserRole::SuperAdmin->value, $roles);
         $this->assertContains(UserRole::User->value, $roles);
     }
 
@@ -63,19 +65,26 @@ class UserTest extends TestCase
         $this->assertSame('Doe', $user->getLastName());
     }
 
-    public function testOrganizationAssociation(): void
+    public function testMustChangePasswordDefaultsFalse(): void
     {
         $user = new User();
-        $organization = new Organization();
-        $organization->setLabel('Test Org');
 
-        $user->setOrganization($organization);
+        $this->assertFalse($user->isMustChangePassword());
+    }
 
-        $this->assertSame($organization, $user->getOrganization());
+    public function testSetMustChangePassword(): void
+    {
+        $user = new User();
+        $user->setMustChangePassword(true);
 
-        $user->setOrganization(null);
+        $this->assertTrue($user->isMustChangePassword());
+    }
 
-        $this->assertNull($user->getOrganization());
+    public function testWorkspaceMembershipsInitiallyEmpty(): void
+    {
+        $user = new User();
+
+        $this->assertCount(0, $user->getWorkspaceMemberships());
     }
 
     public function testEraseCredentials(): void

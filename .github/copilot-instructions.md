@@ -4,6 +4,45 @@
 
 Multi-tenant SaaS platform for visual form building with workflow automation. Modular monolith architecture.
 
+## Sentinel — Dual-Mode Architecture
+
+Your application (**Sentinel**) has a single codebase (Symfony 7 + React + PostgreSQL with pgvector + Redis), but thanks to an environment variable (e.g., `APP_MODE`), it can operate in two parallel realities:
+
+---
+
+### ☁️ Mode 1: SaaS (Your Cloud Server)
+
+This is your public business where you earn money from subscriptions.
+
+- **Access:** Anyone can visit your website (e.g., `sentinel-app.com`).
+- **Registration:** Open. Users enter their email and are required to verify it (to filter out spam bots).
+- **Workspace Creation:** Upon registration, their first `Workspace` is automatically created for them, and they are assigned the `OWNER` role.
+- **Monetization:** Limits are enforced. If they want to create more than 5 forms or invite colleagues to their Workspace, they are prompted to upgrade to a paid tier via Stripe.
+- **Infrastructure:** You manage the servers, backups, and updates yourself.
+
+---
+
+### 📦 Mode 2: Self-Hosted (Client's Server or POS Terminal)
+
+This is the version for enterprise clients, supermarkets, or anyone who wants total control over their data on their own hardware.
+
+- **Access:** The client simply downloads your `docker-compose.prod.yml` and runs `docker compose up -d` on their local server or computer.
+- **Registration:** Closed. On the very first launch, a sleek Setup Wizard appears. The first person to enter their details becomes the Super-Admin. No email verification is required.
+- **Team Management:** The Admin creates a `Workspace` (e.g., "Main Supermarket Checkouts") and manually creates accounts for cashiers, providing them with logins/passwords and specific roles.
+- **Offline Mode (PWA):** The React frontend loads onto the POS terminal and can work completely offline. It saves receipts and form submissions to the browser's local database (IndexedDB) and syncs them to the server in batches once the internet connection is restored.
+- **Limits:** Disabled. It's their hardware, so they can create an unlimited number of forms.
+
+---
+
+### 🏗 Solid Foundation (Shared across both modes)
+
+Regardless of where the app is deployed, the underlying architecture is flawless:
+
+1. **Data Isolation:** Everything is tied to Workspaces. API requests always route through `/api/workspaces/{workspaceId}/...`.
+2. **Ownership:** Forms belong to the Workspace, not to a specific user. Users are merely participants (`WorkspaceMember` entity) with varying access levels (Admin, Editor, Viewer).
+3. **AI Readiness:** The PostgreSQL database is spun up with the `pgvector` extension out of the box. This prepares you to easily roll out AI features (like semantic search through form responses) in the future.
+4. **CI/CD:** Zero manual builds. Every push to your GitHub `main` branch automatically builds the Docker images and pushes them to the GitHub Container Registry (GHCR), ensuring your clients always download the freshest release.
+
 ## Architecture
 
 - **Monorepo**: `app/api/` (Symfony) + `app/web/` (React SPA) + `packages/types/` (shared types)
