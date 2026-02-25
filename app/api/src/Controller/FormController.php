@@ -35,7 +35,7 @@ class FormController extends AbstractController
     {
         $workspace = $this->workspaceRepository->find($workspaceId);
 
-        if ($workspace === null) {
+        if (null === $workspace) {
             return $this->json(['error' => 'Workspace not found.'], Response::HTTP_NOT_FOUND);
         }
 
@@ -54,7 +54,7 @@ class FormController extends AbstractController
     ): JsonResponse {
         $workspace = $this->workspaceRepository->find($workspaceId);
 
-        if ($workspace === null) {
+        if (null === $workspace) {
             return $this->json(['error' => 'Workspace not found.'], Response::HTTP_NOT_FOUND);
         }
 
@@ -65,7 +65,7 @@ class FormController extends AbstractController
         $form->setCreatedBy($user);
         $form->setTitle($dto->title);
 
-        if ($dto->description !== null) {
+        if (null !== $dto->description) {
             $form->setDescription($dto->description);
         }
 
@@ -103,19 +103,19 @@ class FormController extends AbstractController
 
         $this->denyAccessUnlessGranted(FormVoter::EDIT, $form);
 
-        if ($dto->title !== null) {
+        if (null !== $dto->title) {
             $form->setTitle($dto->title);
         }
 
-        if ($dto->description !== null) {
+        if (null !== $dto->description) {
             $form->setDescription($dto->description);
         }
 
-        if ($dto->status !== null) {
+        if (null !== $dto->status) {
             $form->setStatus(FormStatus::from($dto->status));
         }
 
-        if ($dto->schema !== null) {
+        if (null !== $dto->schema) {
             $form->setSchema($dto->schema);
         }
 
@@ -145,7 +145,7 @@ class FormController extends AbstractController
     {
         $form = $this->formRepository->find($formId);
 
-        if ($form === null || (string) $form->getWorkspace()?->getId() !== $workspaceId) {
+        if (null === $form || (string) $form->getWorkspace()?->getId() !== $workspaceId) {
             return $this->json(['error' => 'Form not found.'], Response::HTTP_NOT_FOUND);
         }
 

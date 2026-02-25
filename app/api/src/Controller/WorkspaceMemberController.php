@@ -63,13 +63,13 @@ class WorkspaceMemberController extends AbstractController
 
         $user = $this->userRepository->find($dto->userId);
 
-        if ($user === null) {
+        if (null === $user) {
             return $this->json(['error' => 'User not found.'], Response::HTTP_NOT_FOUND);
         }
 
         $existing = $this->memberRepository->findOneByWorkspaceAndUser($workspace, $user);
 
-        if ($existing !== null) {
+        if (null !== $existing) {
             return $this->json(
                 ['error' => 'User is already a member of this workspace.'],
                 Response::HTTP_CONFLICT,
@@ -102,17 +102,17 @@ class WorkspaceMemberController extends AbstractController
 
         $member = $this->memberRepository->find($memberId);
 
-        if ($member === null || (string) $member->getWorkspace()?->getId() !== $workspaceId) {
+        if (null === $member || (string) $member->getWorkspace()?->getId() !== $workspaceId) {
             return $this->json(['error' => 'Member not found.'], Response::HTTP_NOT_FOUND);
         }
 
         $newRole = WorkspaceRole::from($dto->role);
 
         // Protect against demoting the last owner
-        if ($member->getRole() === WorkspaceRole::Owner && $newRole !== WorkspaceRole::Owner) {
-            $ownerCount = count(array_filter(
+        if (WorkspaceRole::Owner === $member->getRole() && WorkspaceRole::Owner !== $newRole) {
+            $ownerCount = \count(array_filter(
                 $workspace->getMembers()->toArray(),
-                static fn (WorkspaceMember $m) => $m->getRole() === WorkspaceRole::Owner,
+                static fn (WorkspaceMember $m) => WorkspaceRole::Owner === $m->getRole(),
             ));
 
             if ($ownerCount <= 1) {
@@ -143,7 +143,7 @@ class WorkspaceMemberController extends AbstractController
 
         $member = $this->memberRepository->find($memberId);
 
-        if ($member === null || (string) $member->getWorkspace()?->getId() !== $workspaceId) {
+        if (null === $member || (string) $member->getWorkspace()?->getId() !== $workspaceId) {
             return $this->json(['error' => 'Member not found.'], Response::HTTP_NOT_FOUND);
         }
 
@@ -157,10 +157,10 @@ class WorkspaceMemberController extends AbstractController
         }
 
         // Protect against removing the last owner
-        if ($member->getRole() === WorkspaceRole::Owner) {
-            $ownerCount = count(array_filter(
+        if (WorkspaceRole::Owner === $member->getRole()) {
+            $ownerCount = \count(array_filter(
                 $workspace->getMembers()->toArray(),
-                static fn (WorkspaceMember $m) => $m->getRole() === WorkspaceRole::Owner,
+                static fn (WorkspaceMember $m) => WorkspaceRole::Owner === $m->getRole(),
             ));
 
             if ($ownerCount <= 1) {
@@ -181,7 +181,7 @@ class WorkspaceMemberController extends AbstractController
     {
         $workspace = $this->workspaceRepository->find($id);
 
-        if ($workspace === null) {
+        if (null === $workspace) {
             return $this->json(['error' => 'Workspace not found.'], Response::HTTP_NOT_FOUND);
         }
 

@@ -23,7 +23,7 @@ class WorkspaceVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return in_array($attribute, [self::VIEW, self::EDIT, self::MANAGE_MEMBERS, self::DELETE], true)
+        return \in_array($attribute, [self::VIEW, self::EDIT, self::MANAGE_MEMBERS, self::DELETE], true)
             && $subject instanceof Workspace;
     }
 
@@ -35,16 +35,16 @@ class WorkspaceVoter extends Voter
             return false;
         }
 
-        if (in_array('ROLE_SUPER_ADMIN', $user->getRoles(), true)) {
+        if (\in_array('ROLE_SUPER_ADMIN', $user->getRoles(), true)) {
             return true;
         }
 
         $role = $this->getMemberRole($user, $subject);
 
         return match ($attribute) {
-            self::VIEW => $role !== null,
-            self::EDIT, self::MANAGE_MEMBERS => in_array($role, [WorkspaceRole::Owner, WorkspaceRole::Admin], true),
-            self::DELETE => $role === WorkspaceRole::Owner,
+            self::VIEW => null !== $role,
+            self::EDIT, self::MANAGE_MEMBERS => \in_array($role, [WorkspaceRole::Owner, WorkspaceRole::Admin], true),
+            self::DELETE => WorkspaceRole::Owner === $role,
             default => false,
         };
     }

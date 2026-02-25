@@ -147,7 +147,7 @@ class SetupWizardSubscriberTest extends TestCase
 
         // Events can be registered as [method, priority]
         $registration = $events['kernel.request'];
-        $priority = is_array($registration) ? $registration[1] : 0;
+        $priority = \is_array($registration) ? $registration[1] : 0;
 
         $this->assertSame(200, $priority);
     }

@@ -45,7 +45,7 @@ class WorkspaceController extends AbstractController
         $workspace = new Workspace();
         $workspace->setName($dto->name);
 
-        if ($dto->slug !== null) {
+        if (null !== $dto->slug) {
             $workspace->setSlug($dto->slug);
         }
 
@@ -65,7 +65,7 @@ class WorkspaceController extends AbstractController
     {
         $workspace = $this->workspaceRepository->find($id);
 
-        if ($workspace === null) {
+        if (null === $workspace) {
             return $this->json(['error' => 'Workspace not found.'], Response::HTTP_NOT_FOUND);
         }
 
@@ -81,17 +81,17 @@ class WorkspaceController extends AbstractController
     ): JsonResponse {
         $workspace = $this->workspaceRepository->find($id);
 
-        if ($workspace === null) {
+        if (null === $workspace) {
             return $this->json(['error' => 'Workspace not found.'], Response::HTTP_NOT_FOUND);
         }
 
         $this->denyAccessUnlessGranted(WorkspaceVoter::EDIT, $workspace);
 
-        if ($dto->name !== null) {
+        if (null !== $dto->name) {
             $workspace->setName($dto->name);
         }
 
-        if ($dto->slug !== null) {
+        if (null !== $dto->slug) {
             $workspace->setSlug($dto->slug);
         }
 
@@ -105,7 +105,7 @@ class WorkspaceController extends AbstractController
     {
         $workspace = $this->workspaceRepository->find($id);
 
-        if ($workspace === null) {
+        if (null === $workspace) {
             return $this->json(['error' => 'Workspace not found.'], Response::HTTP_NOT_FOUND);
         }
 

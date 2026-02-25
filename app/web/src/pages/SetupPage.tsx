@@ -1,13 +1,5 @@
 import { useState } from 'react'
-import {
-  Paper,
-  Title,
-  Text,
-  TextInput,
-  PasswordInput,
-  Button,
-  Stack,
-} from '@mantine/core'
+import { Paper, Title, Text, TextInput, PasswordInput, Button, Stack } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { AuthLayout } from '@/components/auth'
 import { useToast } from '@/components/toast'

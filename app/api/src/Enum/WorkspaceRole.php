@@ -6,8 +6,8 @@ namespace App\Enum;
 
 enum WorkspaceRole: string
 {
-    case Owner  = 'owner';
-    case Admin  = 'admin';
+    case Owner = 'owner';
+    case Admin = 'admin';
     case Editor = 'editor';
     case Viewer = 'viewer';
 }

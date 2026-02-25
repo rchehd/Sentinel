@@ -8,6 +8,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class UpdateFormRequest
 {
+    /**
+     * @param array<mixed>|null $schema
+     */
     public function __construct(
         #[Assert\NotBlank(allowNull: true)]
         #[Assert\Length(max: 255)]

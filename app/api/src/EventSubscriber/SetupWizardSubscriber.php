@@ -33,7 +33,7 @@ class SetupWizardSubscriber implements EventSubscriberInterface
         $path = $event->getRequest()->getPathInfo();
 
         // Always allow health checks and CORS preflight
-        if ($path === '/api/health' || $event->getRequest()->getMethod() === 'OPTIONS') {
+        if ('/api/health' === $path || 'OPTIONS' === $event->getRequest()->getMethod()) {
             return;
         }
 
@@ -55,7 +55,7 @@ class SetupWizardSubscriber implements EventSubscriberInterface
             return;
         }
 
-        if ($hasUsers && $isSetupPath && $path !== '/api/setup/status') {
+        if ($hasUsers && $isSetupPath && '/api/setup/status' !== $path) {
             $event->setResponse(new JsonResponse(
                 ['message' => 'Setup already completed.'],
                 Response::HTTP_FORBIDDEN,

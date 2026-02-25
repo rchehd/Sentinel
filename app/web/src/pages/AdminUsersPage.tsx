@@ -13,8 +13,6 @@ import {
   Badge,
   Alert,
   Paper,
-  ActionIcon,
-  Tooltip,
   Divider,
 } from '@mantine/core'
 import { AppLayout } from '@/components/layout'
@@ -150,7 +148,13 @@ export function AdminUsersPage() {
       </Title>
 
       {createdPassword && (
-        <Alert color="green" mb="lg" title={t('admin.generatedPassword')} withCloseButton onClose={() => setCreatedPassword(null)}>
+        <Alert
+          color="green"
+          mb="lg"
+          title={t('admin.generatedPassword')}
+          withCloseButton
+          onClose={() => setCreatedPassword(null)}
+        >
           <Group gap="xs">
             <Text ff="monospace" fw={600}>
               {createdPassword}
@@ -218,10 +222,7 @@ export function AdminUsersPage() {
                 value={password}
                 onChange={(e) => setPassword(e.currentTarget.value)}
               />
-              <Button
-                variant="default"
-                onClick={() => setPassword(generatePassword())}
-              >
+              <Button variant="default" onClick={() => setPassword(generatePassword())}>
                 {t('admin.generatePassword')}
               </Button>
             </Group>
@@ -282,12 +283,18 @@ export function AdminUsersPage() {
                 <Table.Td>
                   <Group gap="xs">
                     {u.isActive ? (
-                      <Badge color="green" variant="light">Active</Badge>
+                      <Badge color="green" variant="light">
+                        Active
+                      </Badge>
                     ) : (
-                      <Badge color="gray" variant="light">Inactive</Badge>
+                      <Badge color="gray" variant="light">
+                        Inactive
+                      </Badge>
                     )}
                     {u.mustChangePassword && (
-                      <Badge color="orange" variant="light">Must change pw</Badge>
+                      <Badge color="orange" variant="light">
+                        Must change pw
+                      </Badge>
                     )}
                   </Group>
                 </Table.Td>

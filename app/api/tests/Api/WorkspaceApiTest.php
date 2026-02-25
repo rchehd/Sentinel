@@ -9,7 +9,6 @@ use App\Entity\Workspace;
 use App\Entity\WorkspaceMember;
 use App\Enum\WorkspaceRole;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;

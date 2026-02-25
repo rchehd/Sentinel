@@ -36,7 +36,7 @@ class PasswordController extends AbstractController
         }
 
         if (!$user->isMustChangePassword()) {
-            if ($dto->currentPassword === null) {
+            if (null === $dto->currentPassword) {
                 return $this->json(
                     ['code' => 'current_password_required', 'error' => 'Current password is required.'],
                     Response::HTTP_UNPROCESSABLE_ENTITY,

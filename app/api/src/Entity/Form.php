@@ -50,6 +50,7 @@ class Form
     #[Groups(['form:read', 'form:write'])]
     private FormStatus $status = FormStatus::Draft;
 
+    /** @var array<mixed> */
     #[ORM\Column(type: Types::JSON)]
     #[Groups(['form:read', 'form:write'])]
     private array $schema = [];
@@ -119,11 +120,13 @@ class Form
         return $this;
     }
 
+    /** @return array<mixed> */
     public function getSchema(): array
     {
         return $this->schema;
     }
 
+    /** @param array<mixed> $schema */
     public function setSchema(array $schema): static
     {
         $this->schema = $schema;

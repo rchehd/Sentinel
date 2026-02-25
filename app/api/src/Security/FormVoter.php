@@ -7,7 +7,6 @@ namespace App\Security;
 use App\Entity\Form;
 use App\Entity\User;
 use App\Entity\Workspace;
-use App\Entity\WorkspaceMember;
 use App\Enum\WorkspaceRole;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
@@ -24,7 +23,7 @@ class FormVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return in_array($attribute, [self::VIEW, self::EDIT, self::DELETE], true)
+        return \in_array($attribute, [self::VIEW, self::EDIT, self::DELETE], true)
             && $subject instanceof Form;
     }
 
@@ -36,22 +35,22 @@ class FormVoter extends Voter
             return false;
         }
 
-        if (in_array('ROLE_SUPER_ADMIN', $user->getRoles(), true)) {
+        if (\in_array('ROLE_SUPER_ADMIN', $user->getRoles(), true)) {
             return true;
         }
 
         $workspace = $subject->getWorkspace();
 
-        if ($workspace === null) {
+        if (null === $workspace) {
             return false;
         }
 
         $role = $this->getMemberRole($user, $workspace);
 
         return match ($attribute) {
-            self::VIEW => $role !== null,
-            self::EDIT => in_array($role, [WorkspaceRole::Owner, WorkspaceRole::Admin, WorkspaceRole::Editor], true),
-            self::DELETE => in_array($role, [WorkspaceRole::Owner, WorkspaceRole::Admin], true),
+            self::VIEW => null !== $role,
+            self::EDIT => \in_array($role, [WorkspaceRole::Owner, WorkspaceRole::Admin, WorkspaceRole::Editor], true),
+            self::DELETE => \in_array($role, [WorkspaceRole::Owner, WorkspaceRole::Admin], true),
             default => false,
         };
     }

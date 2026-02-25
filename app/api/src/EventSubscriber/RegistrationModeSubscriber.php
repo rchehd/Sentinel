@@ -35,15 +35,15 @@ class RegistrationModeSubscriber implements EventSubscriberInterface
 
         $request = $event->getRequest();
 
-        if ($request->getMethod() !== Request::METHOD_POST) {
+        if (Request::METHOD_POST !== $request->getMethod()) {
             return;
         }
 
-        if ($request->getPathInfo() !== '/api/register') {
+        if ('/api/register' !== $request->getPathInfo()) {
             return;
         }
 
-        if ($this->appMode !== 'self_hosted') {
+        if ('self_hosted' !== $this->appMode) {
             return;
         }
 

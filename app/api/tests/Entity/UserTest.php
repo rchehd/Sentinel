@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Entity;
 
 use App\Entity\User;
-use App\Entity\Workspace;
-use App\Entity\WorkspaceMember;
 use App\Enum\UserRole;
-use App\Enum\WorkspaceRole;
 use PHPUnit\Framework\TestCase;
 
 class UserTest extends TestCase

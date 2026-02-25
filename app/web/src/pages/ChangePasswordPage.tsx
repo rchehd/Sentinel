@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Paper, Title, Text, PasswordInput, Button, Stack, Alert } from '@mantine/core'
+import { Paper, Title, Text, PasswordInput, Button, Stack } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { AuthLayout } from '@/components/auth'
 import { useToast } from '@/components/toast'
@@ -30,7 +30,8 @@ export function ChangePasswordPage() {
     if (!newPassword) newErrors.newPassword = t('auth.passwordRequired')
     else if (newPassword.length < 8) newErrors.newPassword = t('auth.passwordMinLength')
     if (!confirmPassword) newErrors.confirmPassword = t('auth.confirmPasswordRequired')
-    else if (newPassword !== confirmPassword) newErrors.confirmPassword = t('auth.passwordsMustMatch')
+    else if (newPassword !== confirmPassword)
+      newErrors.confirmPassword = t('auth.passwordsMustMatch')
 
     if (Object.keys(newErrors).length) {
       setErrors(newErrors)
