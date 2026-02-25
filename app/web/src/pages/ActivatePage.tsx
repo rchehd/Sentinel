@@ -30,7 +30,7 @@ export function ActivatePage() {
   }, [token, navigate])
 
   return (
-    <Center mih="100vh">
+    <Center mih="100vh" role="status" aria-label="Loading">
       <Loader size="lg" />
     </Center>
   )

@@ -182,38 +182,4 @@ class UserApiTest extends WebTestCase
 
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
-
-    public function testCreateUserWithOrganization(): void
-    {
-        $client = static::createClient();
-        $uid = uniqid();
-
-        // Create organization first
-        $client->request('POST', '/api/organizations', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_ACCEPT' => 'application/json',
-        ], (string) json_encode([
-            'label' => "User Org {$uid}",
-        ]));
-
-        $orgData = json_decode((string) $client->getResponse()->getContent(), true);
-        $orgId = $orgData['id'];
-
-        // Create user linked to organization
-        $client->request('POST', '/api/users', [], [], [
-            'CONTENT_TYPE' => 'application/ld+json',
-            'HTTP_ACCEPT' => 'application/json',
-        ], (string) json_encode([
-            'email' => "orguser-{$uid}@example.com",
-            'username' => "orguser-{$uid}",
-            'password' => 'TestPassword123!',
-            'roles' => ['ROLE_ORG_MEMBER'],
-            'organization' => "/api/organizations/{$orgId}",
-        ]));
-
-        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
-
-        $data = json_decode((string) $client->getResponse()->getContent(), true);
-        $this->assertNotNull($data['organization']);
-    }
 }

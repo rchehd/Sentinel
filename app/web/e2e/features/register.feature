@@ -28,18 +28,6 @@ Feature: Register
     And I click "Sign Up"
     Then I see field error "Passwords don't match"
 
-  Scenario: Organization fields appear when checkbox is checked
-    Then the "Company name" field is not visible
-    When I check the "Create an organization" checkbox
-    Then the "Company name" field is visible
-    And the "Company domain" field is visible
-
-  Scenario: Organization name is required when creating an organization
-    When I check the "Create an organization" checkbox
-    And I fill the register form with email "user@example.com", username "testuser", password "password123"
-    And I click "Sign Up"
-    Then I see field error "Please enter your organization name"
-
   Scenario: Successful registration navigates to the check-email page
     Given the register API returns 201
     When I fill the register form with email "newuser@example.com", username "newuser", password "password123"

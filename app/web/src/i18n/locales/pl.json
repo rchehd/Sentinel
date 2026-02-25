@@ -69,7 +69,26 @@
     "ssoGithub": "GitHub",
     "accessGranted": "Dostęp przyznany",
     "authenticationFailed": "Błąd uwierzytelniania",
-    "registrationFailed": "Błąd rejestracji"
+    "registrationFailed": "Błąd rejestracji",
+    "changePassword": "Ustaw nowe hasło",
+    "changePasswordDesc": "Nowe hasło jest wymagane przed uzyskaniem dostępu do konta.",
+    "newPassword": "Nowe hasło",
+    "passwordChanged": "Hasło zaktualizowane",
+    "changePasswordSuccess": "Twoje nowe hasło zostało zapisane.",
+    "changePasswordFailed": "Nie udało się zaktualizować hasła",
+    "setPassword": "Ustaw hasło"
+  },
+  "admin": {
+    "users": "Użytkownicy",
+    "createUser": "Utwórz użytkownika",
+    "generatePassword": "Generuj hasło",
+    "requirePasswordChange": "Wymagaj zmiany hasła przy pierwszym logowaniu",
+    "userCreated": "Użytkownik utworzony",
+    "userCreatedDesc": "Konto zostało pomyślnie utworzone.",
+    "generatedPassword": "Wygenerowane hasło — udostępnij je użytkownikowi:",
+    "copyPassword": "Kopiuj",
+    "copiedPassword": "Skopiowano!",
+    "noUsers": "Brak użytkowników."
   },
   "nav": {
     "home": "Strona główna",
@@ -85,6 +104,9 @@
   "errors": {
     "invalid_credentials": "Nieprawidłowy e-mail lub hasło.",
     "account_not_activated": "Konto nie jest aktywowane. Sprawdź swoją pocztę e-mail.",
-    "org_label_required": "Nazwa organizacji jest wymagana."
+    "org_label_required": "Nazwa organizacji jest wymagana.",
+    "password_mismatch": "Hasła nie są zgodne.",
+    "invalid_current_password": "Aktualne hasło jest nieprawidłowe.",
+    "current_password_required": "Aktualne hasło jest wymagane."
   }
 }

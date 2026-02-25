@@ -25,14 +25,4 @@ class RegistrationRequest
 
     #[Assert\Length(max: 100)]
     public ?string $lastName = null;
-
-    #[Assert\NotBlank]
-    #[Assert\Choice(choices: ['ROLE_USER', 'ROLE_ORG_OWNER'])]
-    public string $role = 'ROLE_USER';
-
-    #[Assert\Length(max: 255)]
-    public ?string $organizationLabel = null;
-
-    #[Assert\Length(max: 255)]
-    public ?string $organizationDomain = null;
 }

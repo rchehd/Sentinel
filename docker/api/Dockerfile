@@ -97,6 +97,10 @@ RUN mkdir -p /app/var && \
     chown -R www-data:www-data /app/var && \
     chmod -R 755 /app/var
 
+COPY docker/api/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
 # Health check
 HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
     CMD curl -f http://localhost/api/health || exit 1
