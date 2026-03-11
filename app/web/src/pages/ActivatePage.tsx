@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Center, Loader } from '@mantine/core'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
+import { apiFetch } from '@/lib/api'
 
 export function ActivatePage() {
   const { token } = useParams<{ token: string }>()
@@ -15,7 +14,7 @@ export function ActivatePage() {
     if (!token || didFetch.current) return
     didFetch.current = true
 
-    fetch(`${API_URL}/api/activate/${token}`)
+    apiFetch(`/api/activate/${token}`)
       .then(async (res) => {
         if (res.status === 409) {
           navigate('/login?activation=already_activated', { replace: true })

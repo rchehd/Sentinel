@@ -37,6 +37,20 @@ class AdminUserController extends AbstractController
     #[Route('', name: 'api_admin_users_create', methods: ['POST'])]
     public function create(#[MapRequestPayload] AdminCreateUserRequest $dto): JsonResponse
     {
+        if (null !== $this->userRepository->findOneBy(['email' => $dto->email])) {
+            return $this->json(
+                ['errors' => ['email' => 'This email is already in use.']],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
+        if (null !== $this->userRepository->findOneBy(['username' => $dto->username])) {
+            return $this->json(
+                ['errors' => ['username' => 'This username is already taken.']],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
         $user = new User();
         $user->setEmail($dto->email);
         $user->setUsername($dto->username);

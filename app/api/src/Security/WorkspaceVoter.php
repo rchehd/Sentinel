@@ -16,14 +16,17 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  */
 class WorkspaceVoter extends Voter
 {
+    use MemberRoleTrait;
+
     public const string VIEW = 'workspace_view';
     public const string EDIT = 'workspace_edit';
     public const string MANAGE_MEMBERS = 'workspace_manage_members';
     public const string DELETE = 'workspace_delete';
+    public const string FORM_CREATE = 'form_create';
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return \in_array($attribute, [self::VIEW, self::EDIT, self::MANAGE_MEMBERS, self::DELETE], true)
+        return \in_array($attribute, [self::VIEW, self::EDIT, self::MANAGE_MEMBERS, self::DELETE, self::FORM_CREATE], true)
             && $subject instanceof Workspace;
     }
 
@@ -44,19 +47,9 @@ class WorkspaceVoter extends Voter
         return match ($attribute) {
             self::VIEW => null !== $role,
             self::EDIT, self::MANAGE_MEMBERS => \in_array($role, [WorkspaceRole::Owner, WorkspaceRole::Admin], true),
+            self::FORM_CREATE => \in_array($role, [WorkspaceRole::Owner, WorkspaceRole::Admin, WorkspaceRole::Editor], true),
             self::DELETE => WorkspaceRole::Owner === $role,
             default => false,
         };
-    }
-
-    private function getMemberRole(User $user, Workspace $workspace): ?WorkspaceRole
-    {
-        foreach ($workspace->getMembers() as $member) {
-            if ((string) $member->getUser()?->getId() === (string) $user->getId()) {
-                return $member->getRole();
-            }
-        }
-
-        return null;
     }
 }

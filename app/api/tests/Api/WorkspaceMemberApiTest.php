@@ -31,8 +31,9 @@ class WorkspaceMemberApiTest extends WebTestCase
         $data = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertCount(2, $data);
         $this->assertArrayHasKey('id', $data[0]);
-        $this->assertArrayHasKey('userId', $data[0]);
-        $this->assertArrayHasKey('username', $data[0]);
+        $this->assertArrayHasKey('user', $data[0]);
+        $this->assertArrayHasKey('id', $data[0]['user']);
+        $this->assertArrayHasKey('username', $data[0]['user']);
         $this->assertArrayHasKey('role', $data[0]);
         $this->assertArrayHasKey('joinedAt', $data[0]);
     }
@@ -68,7 +69,7 @@ class WorkspaceMemberApiTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
 
         $data = json_decode((string) $client->getResponse()->getContent(), true);
-        $this->assertSame((string) $newMember->getId(), $data['userId']);
+        $this->assertSame((string) $newMember->getId(), $data['user']['id']);
         $this->assertSame('editor', $data['role']);
     }
 

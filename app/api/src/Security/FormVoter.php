@@ -6,7 +6,6 @@ namespace App\Security;
 
 use App\Entity\Form;
 use App\Entity\User;
-use App\Entity\Workspace;
 use App\Enum\WorkspaceRole;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
@@ -17,6 +16,8 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  */
 class FormVoter extends Voter
 {
+    use MemberRoleTrait;
+
     public const string VIEW = 'form_view';
     public const string EDIT = 'form_edit';
     public const string DELETE = 'form_delete';
@@ -53,16 +54,5 @@ class FormVoter extends Voter
             self::DELETE => \in_array($role, [WorkspaceRole::Owner, WorkspaceRole::Admin], true),
             default => false,
         };
-    }
-
-    private function getMemberRole(User $user, Workspace $workspace): ?WorkspaceRole
-    {
-        foreach ($workspace->getMembers() as $member) {
-            if ((string) $member->getUser()?->getId() === (string) $user->getId()) {
-                return $member->getRole();
-            }
-        }
-
-        return null;
     }
 }

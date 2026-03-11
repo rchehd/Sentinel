@@ -1,10 +1,10 @@
 import { createContext, lazy, Suspense, useContext, useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { PageLoader } from '@/components/loader'
 import { type AppMode, ModeContext } from '@/context/ModeContext'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
+import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { WorkspacesProvider, WorkspaceLayout } from '@/context/WorkspaceContext'
+import { apiFetch } from '@/lib/api'
 
 const LoginPage = lazy(() => import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })))
 const RegisterPage = lazy(() =>
@@ -48,7 +48,7 @@ function SetupProvider({ children }: { children: React.ReactNode }) {
     if (didCheck.current) return
     didCheck.current = true
 
-    fetch(`${API_URL}/api/setup/status`)
+    apiFetch('/api/setup/status')
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { configured: boolean; mode: AppMode } | null) => {
         if (data) setState({ configured: data.configured, mode: data.mode })
@@ -57,7 +57,7 @@ function SetupProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setChecked(true))
   }, [])
 
-  if (!checked) return null
+  if (!checked) return <PageLoader variant="full" visible />
 
   return (
     <SetupContext.Provider value={state}>
@@ -82,25 +82,23 @@ function ConfiguredRoute() {
   return configured ? <Outlet /> : <Navigate to="/setup/admin" replace />
 }
 
+/** Only accessible when the user is authenticated. Redirects to /login otherwise. */
+function AuthGuard() {
+  const { user, loading } = useAuth()
+  if (loading) return <PageLoader variant="full" visible />
+  return user ? <Outlet /> : <Navigate to="/login" replace />
+}
+
 // ---------------------------------------------------------------------------
 // App
 // ---------------------------------------------------------------------------
 
 function App() {
-  const { t } = useTranslation()
-  const [initialLoading, setInitialLoading] = useState(true)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setInitialLoading(false), 1000)
-    return () => clearTimeout(timer)
-  }, [])
-
   return (
-    <>
-      <PageLoader variant="full" visible={initialLoading} text={t('common.initializingCore')} />
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader variant="route" visible />}>
-          <SetupProvider>
+    <BrowserRouter>
+      <Suspense fallback={<PageLoader variant="route" visible />}>
+        <SetupProvider>
+          <AuthProvider>
             <Routes>
               <Route element={<SetupOnlyRoute />}>
                 <Route path="/setup/admin" element={<SetupPage />} />
@@ -111,17 +109,26 @@ function App() {
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/register/check-email" element={<RegisterCheckEmailPage />} />
                 <Route path="/activate/:token" element={<ActivatePage />} />
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/change-password" element={<ChangePasswordPage />} />
-                <Route path="/admin/users" element={<AdminUsersPage />} />
+
+                <Route element={<AuthGuard />}>
+                  <Route element={<WorkspacesProvider />}>
+                    <Route path="/:slug" element={<WorkspaceLayout />}>
+                      <Route index element={<Navigate to="home" replace />} />
+                      <Route path="home" element={<HomePage />} />
+                      <Route path="dashboard" element={<DashboardPage />} />
+                    </Route>
+                  </Route>
+                  <Route path="/change-password" element={<ChangePasswordPage />} />
+                  <Route path="/admin/users" element={<AdminUsersPage />} />
+                </Route>
+
                 <Route path="*" element={<Navigate to="/login" replace />} />
               </Route>
             </Routes>
-          </SetupProvider>
-        </Suspense>
-      </BrowserRouter>
-    </>
+          </AuthProvider>
+        </SetupProvider>
+      </Suspense>
+    </BrowserRouter>
   )
 }
 

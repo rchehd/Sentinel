@@ -17,8 +17,7 @@ import {
 } from '@mantine/core'
 import { AppLayout } from '@/components/layout'
 import { useToast } from '@/components/toast'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
+import { apiFetch } from '@/lib/api'
 
 interface UserRow {
   id: string
@@ -33,15 +32,18 @@ interface UserRow {
 
 function generatePassword(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%'
-  return Array.from({ length: 16 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+  const values = new Uint32Array(16)
+  crypto.getRandomValues(values)
+  return Array.from(values, (v) => chars[v % chars.length]).join('')
 }
 
-export function AdminUsersPage() {
+interface CreateUserFormProps {
+  onCreated: () => void
+}
+
+function CreateUserForm({ onCreated }: CreateUserFormProps) {
   const { t } = useTranslation()
   const { showToast } = useToast()
-
-  const [users, setUsers] = useState<UserRow[]>([])
-  const [loadingUsers, setLoadingUsers] = useState(true)
 
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
@@ -56,22 +58,6 @@ export function AdminUsersPage() {
 
   const clearError = (field: string) =>
     setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev))
-
-  const fetchUsers = async () => {
-    setLoadingUsers(true)
-    try {
-      const res = await fetch(`${API_URL}/api/admin/users`, { credentials: 'include' })
-      if (res.ok) {
-        setUsers(await res.json())
-      }
-    } finally {
-      setLoadingUsers(false)
-    }
-  }
-
-  useEffect(() => {
-    void fetchUsers()
-  }, [])
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -89,21 +75,12 @@ export function AdminUsersPage() {
     setCreatedPassword(null)
 
     try {
-      const body: Record<string, unknown> = {
-        email,
-        username,
-        mustChangePassword,
-      }
+      const body: Record<string, unknown> = { email, username, mustChangePassword }
       if (firstName) body.firstName = firstName
       if (lastName) body.lastName = lastName
       if (password) body.password = password
 
-      const res = await fetch(`${API_URL}/api/admin/users`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
+      const res = await apiFetch('/api/admin/users', { method: 'POST', json: body })
 
       if (!res.ok) {
         const data = await res.json()
@@ -111,10 +88,7 @@ export function AdminUsersPage() {
       }
 
       const data = await res.json()
-
-      if (data.generatedPassword) {
-        setCreatedPassword(data.generatedPassword)
-      }
+      if (data.generatedPassword) setCreatedPassword(data.generatedPassword)
 
       showToast('success', t('admin.userCreated'), t('admin.userCreatedDesc'))
       setEmail('')
@@ -124,10 +98,9 @@ export function AdminUsersPage() {
       setPassword('')
       setMustChangePassword(true)
       setErrors({})
-      await fetchUsers()
+      onCreated()
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('common.error')
-      showToast('error', t('common.error'), message)
+      showToast('error', t('common.error'), err instanceof Error ? err.message : t('common.error'))
     } finally {
       setCreating(false)
     }
@@ -142,11 +115,7 @@ export function AdminUsersPage() {
   }
 
   return (
-    <AppLayout>
-      <Title order={2} mb="lg">
-        {t('admin.users')}
-      </Title>
-
+    <>
       {createdPassword && (
         <Alert
           color="green"
@@ -239,70 +208,114 @@ export function AdminUsersPage() {
           </Stack>
         </form>
       </Paper>
+    </>
+  )
+}
+
+interface UsersTableProps {
+  users: UserRow[]
+  loading: boolean
+}
+
+function UsersTable({ users, loading }: UsersTableProps) {
+  const { t } = useTranslation()
+
+  return (
+    <Table striped highlightOnHover>
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>Email</Table.Th>
+          <Table.Th>{t('auth.username')}</Table.Th>
+          <Table.Th>{t('admin.roles')}</Table.Th>
+          <Table.Th>{t('admin.status')}</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {loading ? (
+          <Table.Tr>
+            <Table.Td colSpan={4}>
+              <Text c="dimmed" ta="center">
+                {t('common.loading')}
+              </Text>
+            </Table.Td>
+          </Table.Tr>
+        ) : users.length === 0 ? (
+          <Table.Tr>
+            <Table.Td colSpan={4}>
+              <Text c="dimmed" ta="center">
+                {t('admin.noUsers')}
+              </Text>
+            </Table.Td>
+          </Table.Tr>
+        ) : (
+          users.map((u) => (
+            <Table.Tr key={u.id}>
+              <Table.Td>{u.email}</Table.Td>
+              <Table.Td>{u.username}</Table.Td>
+              <Table.Td>
+                {u.roles.includes('ROLE_SUPER_ADMIN') ? (
+                  <Badge color="red">{t('admin.roleSuperAdmin')}</Badge>
+                ) : (
+                  <Badge color="blue">{t('admin.roleUser')}</Badge>
+                )}
+              </Table.Td>
+              <Table.Td>
+                <Group gap="xs">
+                  {u.isActive ? (
+                    <Badge color="green" variant="light">
+                      {t('admin.active')}
+                    </Badge>
+                  ) : (
+                    <Badge color="gray" variant="light">
+                      {t('admin.inactive')}
+                    </Badge>
+                  )}
+                  {u.mustChangePassword && (
+                    <Badge color="orange" variant="light">
+                      {t('admin.mustChangePw')}
+                    </Badge>
+                  )}
+                </Group>
+              </Table.Td>
+            </Table.Tr>
+          ))
+        )}
+      </Table.Tbody>
+    </Table>
+  )
+}
+
+export function AdminUsersPage() {
+  const { t } = useTranslation()
+
+  const [users, setUsers] = useState<UserRow[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(true)
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true)
+    try {
+      const res = await apiFetch('/api/admin/users')
+      if (res.ok) setUsers(await res.json())
+    } finally {
+      setLoadingUsers(false)
+    }
+  }
+
+  useEffect(() => {
+    void fetchUsers()
+  }, [])
+
+  return (
+    <AppLayout>
+      <Title order={2} mb="lg">
+        {t('admin.users')}
+      </Title>
+
+      <CreateUserForm onCreated={() => void fetchUsers()} />
 
       <Divider mb="md" />
 
-      <Table striped highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Email</Table.Th>
-            <Table.Th>{t('auth.username')}</Table.Th>
-            <Table.Th>Roles</Table.Th>
-            <Table.Th>Status</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {loadingUsers ? (
-            <Table.Tr>
-              <Table.Td colSpan={4}>
-                <Text c="dimmed" ta="center">
-                  {t('common.loading')}
-                </Text>
-              </Table.Td>
-            </Table.Tr>
-          ) : users.length === 0 ? (
-            <Table.Tr>
-              <Table.Td colSpan={4}>
-                <Text c="dimmed" ta="center">
-                  {t('admin.noUsers')}
-                </Text>
-              </Table.Td>
-            </Table.Tr>
-          ) : (
-            users.map((u) => (
-              <Table.Tr key={u.id}>
-                <Table.Td>{u.email}</Table.Td>
-                <Table.Td>{u.username}</Table.Td>
-                <Table.Td>
-                  {u.roles.includes('ROLE_SUPER_ADMIN') ? (
-                    <Badge color="red">Super Admin</Badge>
-                  ) : (
-                    <Badge color="blue">User</Badge>
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    {u.isActive ? (
-                      <Badge color="green" variant="light">
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge color="gray" variant="light">
-                        Inactive
-                      </Badge>
-                    )}
-                    {u.mustChangePassword && (
-                      <Badge color="orange" variant="light">
-                        Must change pw
-                      </Badge>
-                    )}
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            ))
-          )}
-        </Table.Tbody>
-      </Table>
+      <UsersTable users={users} loading={loadingUsers} />
     </AppLayout>
   )
 }

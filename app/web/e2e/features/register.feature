@@ -7,6 +7,7 @@ Feature: Register
     Then I see the heading "Create an account"
     And the "Email" field is visible
     And the "Username" field is visible
+    And the "Workspace name" field is visible
     And the register password fields are visible
     And the "Sign Up" button is visible
 
@@ -14,6 +15,7 @@ Feature: Register
     When I click "Sign Up"
     Then I see field error "Please enter your email address"
     And I see field error "Please choose a username"
+    And I see field error "Please enter a workspace name"
     And I see field error "Please enter your password"
     And I see field error "Please confirm your password"
 

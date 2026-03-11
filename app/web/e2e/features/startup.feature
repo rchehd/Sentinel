@@ -19,23 +19,23 @@ Feature: Startup flow
     Given the app is not configured
     And I navigate to "/setup/admin"
     When I click "Create admin account"
-    Then I see field error "Email is required."
-    And I see field error "Username is required."
-    And I see field error "Password is required."
+    Then I see field error "Please enter your email address"
+    And I see field error "Please choose a username"
+    And I see field error "Please enter your password"
 
   Scenario: Password too short shows validation error
     Given the app is not configured
     And I navigate to "/setup/admin"
     When I fill the setup form with email "admin@example.com" username "admin" password "short" and confirm "short"
     And I click "Create admin account"
-    Then I see field error "Password must be at least 8 characters."
+    Then I see field error "Password must be at least 8 characters"
 
   Scenario: Mismatched passwords show validation error
     Given the app is not configured
     And I navigate to "/setup/admin"
     When I fill the setup form with email "admin@example.com" username "admin" password "Password123" and confirm "Password999"
     And I click "Create admin account"
-    Then I see field error "Passwords do not match."
+    Then I see field error "Passwords don't match"
 
   Scenario: Successful admin creation redirects to login
     Given the app is not configured
@@ -56,11 +56,13 @@ Feature: Startup flow
     And I navigate to "/login"
     When I submit the login form with email "admin@example.com" and password "Password123"
     Then I see an alert containing "Access Granted"
-    And I am redirected to "/home"
+    And I am redirected to "/test-workspace/home"
     And I see the heading "Welcome to Sentinel"
 
   Scenario: Sign out returns to login page
     Given the app is configured
-    And I navigate to "/home"
+    And I am authenticated as a user
+    And the workspaces API returns a workspace with slug "test-workspace"
+    And I navigate to "/test-workspace/home"
     When I click "Log out"
     Then the page URL is "/login"

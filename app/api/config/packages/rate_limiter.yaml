@@ -1,0 +1,16 @@
+framework:
+    rate_limiter:
+        login:
+            policy: 'fixed_window'
+            limit: 10
+            interval: '1 minute'
+
+        register:
+            policy: 'fixed_window'
+            limit: 5
+            interval: '1 hour'
+
+        activate:
+            policy: 'fixed_window'
+            limit: 20
+            interval: '1 hour'

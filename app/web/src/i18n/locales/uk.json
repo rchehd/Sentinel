@@ -36,6 +36,8 @@
     "username": "Ім'я користувача",
     "firstName": "Ім'я",
     "lastName": "Прізвище",
+    "workspaceName": "Назва робочого простору",
+    "workspaceNamePlaceholder": "напр. Acme Corp, Моя команда…",
     "forgotPassword": "Забули пароль?",
     "noAccount": "Немає облікового запису?",
     "hasAccount": "Вже маєте обліковий запис?",
@@ -61,6 +63,8 @@
     "emailRequired": "Будь ласка, вкажіть вашу електронну адресу",
     "passwordRequired": "Будь ласка, введіть пароль",
     "usernameRequired": "Будь ласка, оберіть ім'я користувача",
+    "workspaceNameRequired": "Будь ласка, введіть назву робочого простору",
+    "workspaceNameMinLength": "Назва робочого простору має містити щонайменше 2 символи",
     "confirmPasswordRequired": "Будь ласка, підтвердіть пароль",
     "organizationRequired": "Будь ласка, вкажіть назву організації",
     "passwordMinLength": "Пароль має містити щонайменше 8 символів",
@@ -88,7 +92,24 @@
     "generatedPassword": "Згенерований пароль — поділіться ним з користувачем:",
     "copyPassword": "Копіювати",
     "copiedPassword": "Скопійовано!",
-    "noUsers": "Користувачів ще немає."
+    "noUsers": "Користувачів ще немає.",
+    "roles": "Ролі",
+    "status": "Статус",
+    "roleSuperAdmin": "Супер Адмін",
+    "roleUser": "Користувач",
+    "active": "Активний",
+    "inactive": "Неактивний",
+    "mustChangePw": "Зміна пароля"
+  },
+  "setup": {
+    "title": "Створити обліковий запис адміністратора",
+    "description": "Налаштуйте перший обліковий запис адміністратора для початку роботи.",
+    "createAdminAccount": "Створити обліковий запис адміністратора",
+    "repeatPassword": "Повторіть пароль",
+    "alreadyConfigured": "Вже налаштовано",
+    "alreadyConfiguredDesc": "Обліковий запис адміністратора вже існує.",
+    "failed": "Налаштування не вдалося",
+    "successDesc": "Тепер ви можете увійти."
   },
   "nav": {
     "home": "Головна",

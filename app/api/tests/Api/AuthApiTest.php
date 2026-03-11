@@ -43,6 +43,7 @@ class AuthApiTest extends WebTestCase
             'email' => "ws-{$uid}@example.com",
             'username' => "ws-{$uid}",
             'password' => 'TestPassword123!',
+            'workspaceName' => "My Workspace {$uid}",
         ]));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -58,7 +59,37 @@ class AuthApiTest extends WebTestCase
 
         $this->assertCount(1, $members);
         $this->assertSame(WorkspaceRole::Owner, $members[0]->getRole());
-        $this->assertSame("ws-{$uid}'s workspace", $members[0]->getWorkspace()?->getName());
+        $this->assertSame("My Workspace {$uid}", $members[0]->getWorkspace()?->getName());
+        $this->assertNotNull($members[0]->getWorkspace()?->getSlug());
+    }
+
+    public function testRegisterWithoutWorkspaceNameFallsBackToDefault(): void
+    {
+        $client = static::createClient();
+        $uid = uniqid();
+
+        $client->request('POST', '/api/register', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], (string) json_encode([
+            'email' => "fb-{$uid}@example.com",
+            'username' => "fb-{$uid}",
+            'password' => 'TestPassword123!',
+        ]));
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $em->getRepository(User::class)->findOneBy(['email' => "fb-{$uid}@example.com"]);
+        $this->assertNotNull($user);
+
+        /** @var WorkspaceMemberRepository $memberRepo */
+        $memberRepo = static::getContainer()->get(WorkspaceMemberRepository::class);
+        $members = $memberRepo->findBy(['user' => $user]);
+
+        $this->assertCount(1, $members);
+        $this->assertSame("fb-{$uid}'s workspace", $members[0]->getWorkspace()?->getName());
+        $this->assertNotNull($members[0]->getWorkspace()?->getSlug());
     }
 
     public function testRegistrationDisabledInSelfHostedMode(): void

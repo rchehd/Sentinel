@@ -36,6 +36,8 @@
     "username": "Username",
     "firstName": "First name",
     "lastName": "Last name",
+    "workspaceName": "Workspace name",
+    "workspaceNamePlaceholder": "e.g. Acme Corp, My Team…",
     "forgotPassword": "Forgot password?",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
@@ -61,6 +63,8 @@
     "emailRequired": "Please enter your email address",
     "passwordRequired": "Please enter your password",
     "usernameRequired": "Please choose a username",
+    "workspaceNameRequired": "Please enter a workspace name",
+    "workspaceNameMinLength": "Workspace name must be at least 2 characters",
     "confirmPasswordRequired": "Please confirm your password",
     "organizationRequired": "Please enter your organization name",
     "passwordMinLength": "Password must be at least 8 characters",
@@ -88,7 +92,24 @@
     "generatedPassword": "Generated password — share this with the user:",
     "copyPassword": "Copy",
     "copiedPassword": "Copied!",
-    "noUsers": "No users yet."
+    "noUsers": "No users yet.",
+    "roles": "Roles",
+    "status": "Status",
+    "roleSuperAdmin": "Super Admin",
+    "roleUser": "User",
+    "active": "Active",
+    "inactive": "Inactive",
+    "mustChangePw": "Must change pw"
+  },
+  "setup": {
+    "title": "Create admin account",
+    "description": "Set up the first administrator account to get started.",
+    "createAdminAccount": "Create admin account",
+    "repeatPassword": "Repeat your password",
+    "alreadyConfigured": "Already configured",
+    "alreadyConfiguredDesc": "An admin account already exists.",
+    "failed": "Setup failed",
+    "successDesc": "You can now log in."
   },
   "nav": {
     "home": "Home",

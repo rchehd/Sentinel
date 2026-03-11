@@ -36,6 +36,8 @@
     "username": "Nazwa użytkownika",
     "firstName": "Imię",
     "lastName": "Nazwisko",
+    "workspaceName": "Nazwa przestrzeni roboczej",
+    "workspaceNamePlaceholder": "np. Acme Corp, Mój zespół…",
     "forgotPassword": "Zapomniałeś hasła?",
     "noAccount": "Nie masz konta?",
     "hasAccount": "Masz już konto?",
@@ -61,6 +63,8 @@
     "emailRequired": "Proszę podać adres e-mail",
     "passwordRequired": "Proszę wprowadzić hasło",
     "usernameRequired": "Proszę wybrać nazwę użytkownika",
+    "workspaceNameRequired": "Proszę podać nazwę przestrzeni roboczej",
+    "workspaceNameMinLength": "Nazwa przestrzeni roboczej musi mieć co najmniej 2 znaki",
     "confirmPasswordRequired": "Proszę potwierdzić hasło",
     "organizationRequired": "Proszę podać nazwę organizacji",
     "passwordMinLength": "Hasło musi mieć co najmniej 8 znaków",
@@ -88,7 +92,24 @@
     "generatedPassword": "Wygenerowane hasło — udostępnij je użytkownikowi:",
     "copyPassword": "Kopiuj",
     "copiedPassword": "Skopiowano!",
-    "noUsers": "Brak użytkowników."
+    "noUsers": "Brak użytkowników.",
+    "roles": "Role",
+    "status": "Status",
+    "roleSuperAdmin": "Super Admin",
+    "roleUser": "Użytkownik",
+    "active": "Aktywny",
+    "inactive": "Nieaktywny",
+    "mustChangePw": "Zmiana hasła"
+  },
+  "setup": {
+    "title": "Utwórz konto administratora",
+    "description": "Skonfiguruj pierwsze konto administratora, aby rozpocząć.",
+    "createAdminAccount": "Utwórz konto administratora",
+    "repeatPassword": "Powtórz hasło",
+    "alreadyConfigured": "Już skonfigurowano",
+    "alreadyConfiguredDesc": "Konto administratora już istnieje.",
+    "failed": "Konfiguracja nie powiodła się",
+    "successDesc": "Możesz się teraz zalogować."
   },
   "nav": {
     "home": "Strona główna",

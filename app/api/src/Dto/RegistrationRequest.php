@@ -25,4 +25,7 @@ class RegistrationRequest
 
     #[Assert\Length(max: 100)]
     public ?string $lastName = null;
+
+    #[Assert\Length(min: 2, max: 100)]
+    public ?string $workspaceName = null;
 }

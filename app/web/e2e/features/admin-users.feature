@@ -1,7 +1,9 @@
 Feature: Admin Users
 
   Background:
-    Given the admin users API returns an empty list
+    Given the app is configured
+    And I am authenticated as a user
+    And the admin users API returns an empty list
     And I navigate to "/admin/users"
 
   Scenario: Admin users page renders correctly

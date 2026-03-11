@@ -4,6 +4,8 @@ import { AppShell, Burger, Group, Title, Select, Button } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { supportedLanguages } from '@/i18n'
 import { ThemeToggle } from '@/components/common'
+import { useAuth } from '@/context/AuthContext'
+import { apiFetch } from '@/lib/api'
 import { Sidebar } from './Sidebar'
 
 interface AppLayoutProps {
@@ -14,8 +16,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [opened, { toggle }] = useDisclosure(true)
-  const handleLogout = () => {
-    // TODO: call logout API / clear auth state
+  const { setUser } = useAuth()
+
+  const handleLogout = async () => {
+    await apiFetch('/api/logout', { method: 'POST' }).catch(() => {})
+    setUser(null)
     navigate('/login', { replace: true })
   }
 

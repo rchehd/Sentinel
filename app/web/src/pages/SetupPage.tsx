@@ -1,13 +1,14 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Paper, Title, Text, TextInput, PasswordInput, Button, Stack } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { AuthLayout } from '@/components/auth'
 import { useToast } from '@/components/toast'
 import { SentinelLogo } from '@/components/logo'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
+import { apiFetch } from '@/lib/api'
 
 function SetupForm() {
+  const { t } = useTranslation()
   const isMobile = useMediaQuery('(max-width: 480px)')
   const { showToast } = useToast()
 
@@ -25,12 +26,12 @@ function SetupForm() {
     e.preventDefault()
 
     const newErrors: Record<string, string> = {}
-    if (!email) newErrors.email = 'Email is required.'
-    if (!username) newErrors.username = 'Username is required.'
-    if (!password) newErrors.password = 'Password is required.'
-    else if (password.length < 8) newErrors.password = 'Password must be at least 8 characters.'
-    if (!confirmPassword) newErrors.confirmPassword = 'Please confirm your password.'
-    else if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match.'
+    if (!email) newErrors.email = t('auth.emailRequired')
+    if (!username) newErrors.username = t('auth.usernameRequired')
+    if (!password) newErrors.password = t('auth.passwordRequired')
+    else if (password.length < 8) newErrors.password = t('auth.passwordMinLength')
+    if (!confirmPassword) newErrors.confirmPassword = t('auth.confirmPasswordRequired')
+    else if (password !== confirmPassword) newErrors.confirmPassword = t('auth.passwordsMustMatch')
     if (Object.keys(newErrors).length) {
       setErrors(newErrors)
       return
@@ -39,28 +40,26 @@ function SetupForm() {
     setLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/api/setup/admin`, {
+      const res = await apiFetch('/api/setup/admin', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password }),
+        json: { email, username, password },
       })
 
       if (res.status === 403) {
-        showToast('info', 'Already configured', 'An admin account already exists.')
+        showToast('info', t('setup.alreadyConfigured'), t('setup.alreadyConfiguredDesc'))
         window.location.replace('/login')
         return
       }
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.detail || data.error || 'Setup failed.')
+        throw new Error(data.detail || data.error || t('setup.failed'))
       }
 
-      showToast('success', 'Admin account created', 'You can now log in.')
+      showToast('success', t('setup.title'), t('setup.successDesc'))
       window.location.replace('/login')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred.'
-      showToast('error', 'Setup failed', message)
+      showToast('error', t('setup.failed'), err instanceof Error ? err.message : t('common.error'))
     } finally {
       setLoading(false)
     }
@@ -76,17 +75,17 @@ function SetupForm() {
     >
       <SentinelLogo size={48} />
       <Title order={2} ta="center" mb={4}>
-        Create admin account
+        {t('setup.title')}
       </Title>
       <Text c="dimmed" size="sm" ta="center" mb="lg">
-        Set up the first administrator account to get started.
+        {t('setup.description')}
       </Text>
 
       <form onSubmit={handleSubmit} noValidate>
         <Stack>
           <TextInput
             required
-            label="Email"
+            label={t('auth.email')}
             placeholder="admin@example.com"
             type="email"
             value={email}
@@ -99,7 +98,7 @@ function SetupForm() {
 
           <TextInput
             required
-            label="Username"
+            label={t('auth.username')}
             placeholder="admin"
             value={username}
             error={errors.username}
@@ -111,8 +110,8 @@ function SetupForm() {
 
           <PasswordInput
             required
-            label="Password"
-            placeholder="Min. 8 characters"
+            label={t('auth.password')}
+            placeholder={t('auth.passwordMinLength')}
             value={password}
             error={errors.password}
             onChange={(e) => {
@@ -123,8 +122,8 @@ function SetupForm() {
 
           <PasswordInput
             required
-            label="Confirm password"
-            placeholder="Repeat your password"
+            label={t('auth.confirmPassword')}
+            placeholder={t('setup.repeatPassword')}
             value={confirmPassword}
             error={errors.confirmPassword}
             onChange={(e) => {
@@ -134,7 +133,7 @@ function SetupForm() {
           />
 
           <Button type="submit" fullWidth loading={loading}>
-            Create admin account
+            {t('setup.createAdminAccount')}
           </Button>
         </Stack>
       </form>
