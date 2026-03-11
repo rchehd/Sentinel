@@ -128,6 +128,33 @@ services:
       timeout: 5s
       retries: 5
 
+  # ========================================
+  # Automatic daily database backups
+  # Backups are stored in ./backups/ on the host.
+  # To restore: docker compose exec database pg_restore ...
+  #
+  # Optional S3/compatible storage:
+  #   Set BACKUP_S3_URI, BACKUP_S3_ACCESS_KEY, BACKUP_S3_SECRET_KEY
+  #   to upload backups off-site automatically.
+  # ========================================
+  backup:
+    image: prodrigestivill/postgres-backup-local:16
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: database
+      POSTGRES_DB: ${POSTGRES_DB:-sentinel}
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel_secret}
+      SCHEDULE: "@daily"       # runs at midnight every day
+      BACKUP_KEEP_DAYS: 7      # keep last 7 daily backups
+      BACKUP_KEEP_WEEKS: 4     # keep last 4 weekly backups
+      BACKUP_KEEP_MONTHS: 6    # keep last 6 monthly backups
+    volumes:
+      - ./backups:/backups     # backups saved on the host machine
+
 volumes:
   caddy_data:
   caddy_config:
