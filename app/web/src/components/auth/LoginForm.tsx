@@ -87,7 +87,11 @@ export function LoginForm() {
       }
 
       showToast('success', t('auth.accessGranted'), t('auth.welcomeBack'))
-      navigate('/home', { replace: true })
+
+      const wsRes = await apiFetch('/api/workspaces')
+      const workspaces = wsRes.ok ? ((await wsRes.json()) as { slug: string }[]) : []
+      const target = workspaces.length > 0 ? `/${workspaces[0].slug}` : '/change-password'
+      navigate(target, { replace: true })
     } catch (err) {
       const message = err instanceof Error ? err.message : t('common.error')
       showToast('error', t('auth.authenticationFailed'), message)

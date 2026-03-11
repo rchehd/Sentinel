@@ -19,10 +19,16 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 #[Route('/api/workspaces')]
 class WorkspaceController extends AbstractController
 {
+    private const RESERVED_SLUGS = [
+        'login', 'logout', 'register', 'activate', 'setup',
+        'change-password', 'admin', 'api', 'app', 'static', 'assets',
+    ];
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly WorkspaceRepository $workspaceRepository,
@@ -56,12 +62,16 @@ class WorkspaceController extends AbstractController
             );
         }
 
+        if (null !== $dto->slug && \in_array($dto->slug, self::RESERVED_SLUGS, true)) {
+            return $this->json(
+                ['errors' => ['slug' => 'This slug is reserved and cannot be used.']],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
         $workspace = new Workspace();
         $workspace->setName($dto->name);
-
-        if (null !== $dto->slug) {
-            $workspace->setSlug($dto->slug);
-        }
+        $workspace->setSlug($dto->slug ?? $this->generateUniqueSlug($dto->name));
 
         $member = new WorkspaceMember();
         $member->setUser($user);
@@ -129,5 +139,20 @@ class WorkspaceController extends AbstractController
         $this->em->flush();
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    private function generateUniqueSlug(string $name): string
+    {
+        $slugger = new AsciiSlugger();
+        $base = strtolower($slugger->slug($name)->toString());
+        $slug = \in_array($base, self::RESERVED_SLUGS, true) ? $base . '-workspace' : $base;
+        $i = 2;
+
+        while (null !== $this->workspaceRepository->findOneBy(['slug' => $slug])) {
+            $slug = $base . '-' . $i;
+            ++$i;
+        }
+
+        return $slug;
     }
 }

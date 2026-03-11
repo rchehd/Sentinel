@@ -11,6 +11,7 @@ use App\Entity\WorkspaceMember;
 use App\Enum\UserRole;
 use App\Enum\WorkspaceRole;
 use App\Repository\UserRepository;
+use App\Repository\WorkspaceRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,14 +21,21 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 class RegistrationController extends AbstractController
 {
+    private const RESERVED_SLUGS = [
+        'login', 'logout', 'register', 'activate', 'setup',
+        'change-password', 'admin', 'api', 'app', 'static', 'assets',
+    ];
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly MailerInterface $mailer,
         private readonly UserRepository $userRepository,
+        private readonly WorkspaceRepository $workspaceRepository,
         #[\Symfony\Component\DependencyInjection\Attribute\Autowire(env: 'MAILER_FROM')]
         private readonly string $mailerFrom = 'noreply@sentinel.localhost',
         #[\Symfony\Component\DependencyInjection\Attribute\Autowire('%env(default::FRONTEND_URL)%')]
@@ -66,8 +74,10 @@ class RegistrationController extends AbstractController
         $activationToken = bin2hex(random_bytes(32));
         $user->setActivationToken($activationToken);
 
+        $workspaceName = $dto->workspaceName ?? \sprintf("%s's workspace", $dto->username);
         $workspace = new Workspace();
-        $workspace->setName(\sprintf("%s's workspace", $dto->username));
+        $workspace->setName($workspaceName);
+        $workspace->setSlug($this->generateUniqueSlug($workspaceName));
 
         $member = new WorkspaceMember();
         $member->setUser($user);
@@ -109,6 +119,21 @@ class RegistrationController extends AbstractController
         $this->em->flush();
 
         return $this->json(['message' => 'Account activated successfully.']);
+    }
+
+    private function generateUniqueSlug(string $name): string
+    {
+        $slugger = new AsciiSlugger();
+        $base = strtolower($slugger->slug($name)->toString());
+        $slug = \in_array($base, self::RESERVED_SLUGS, true) ? $base . '-workspace' : $base;
+        $i = 2;
+
+        while (null !== $this->workspaceRepository->findOneBy(['slug' => $slug])) {
+            $slug = $base . '-' . $i;
+            ++$i;
+        }
+
+        return $slug;
     }
 
     private function sendActivationEmail(User $user, string $token): void

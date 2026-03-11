@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 import { PageLoader } from '@/components/loader'
 import { type AppMode, ModeContext } from '@/context/ModeContext'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { WorkspacesProvider, WorkspaceLayout } from '@/context/WorkspaceContext'
 import { apiFetch } from '@/lib/api'
 
 const LoginPage = lazy(() => import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })))
@@ -110,8 +111,13 @@ function App() {
                 <Route path="/activate/:token" element={<ActivatePage />} />
 
                 <Route element={<AuthGuard />}>
-                  <Route path="/home" element={<HomePage />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route element={<WorkspacesProvider />}>
+                    <Route path="/:slug" element={<WorkspaceLayout />}>
+                      <Route index element={<Navigate to="home" replace />} />
+                      <Route path="home" element={<HomePage />} />
+                      <Route path="dashboard" element={<DashboardPage />} />
+                    </Route>
+                  </Route>
                   <Route path="/change-password" element={<ChangePasswordPage />} />
                   <Route path="/admin/users" element={<AdminUsersPage />} />
                 </Route>

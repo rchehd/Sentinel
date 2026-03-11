@@ -28,6 +28,7 @@ export function RegisterForm() {
 
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
+  const [workspaceName, setWorkspaceName] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [password, setPassword] = useState('')
@@ -44,6 +45,8 @@ export function RegisterForm() {
     const newErrors: Record<string, string> = {}
     if (!email) newErrors.email = t('auth.emailRequired')
     if (!username) newErrors.username = t('auth.usernameRequired')
+    if (!workspaceName) newErrors.workspaceName = t('auth.workspaceNameRequired')
+    else if (workspaceName.length < 2) newErrors.workspaceName = t('auth.workspaceNameMinLength')
     if (!password) newErrors.password = t('auth.passwordRequired')
     else if (password.length < 8) newErrors.password = t('auth.passwordMinLength')
     if (!confirmPassword) newErrors.confirmPassword = t('auth.confirmPasswordRequired')
@@ -62,6 +65,7 @@ export function RegisterForm() {
         body: JSON.stringify({
           email,
           username,
+          workspaceName,
           password,
           firstName: firstName || null,
           lastName: lastName || null,
@@ -131,6 +135,18 @@ export function RegisterForm() {
             onChange={(e) => {
               setUsername(e.currentTarget.value)
               clearError('username')
+            }}
+          />
+
+          <TextInput
+            required
+            label={t('auth.workspaceName')}
+            placeholder={t('auth.workspaceNamePlaceholder')}
+            value={workspaceName}
+            error={errors.workspaceName}
+            onChange={(e) => {
+              setWorkspaceName(e.currentTarget.value)
+              clearError('workspaceName')
             }}
           />
 

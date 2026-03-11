@@ -43,6 +43,7 @@ class AuthApiTest extends WebTestCase
             'email' => "ws-{$uid}@example.com",
             'username' => "ws-{$uid}",
             'password' => 'TestPassword123!',
+            'workspaceName' => "My Workspace {$uid}",
         ]));
 
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
@@ -58,7 +59,8 @@ class AuthApiTest extends WebTestCase
 
         $this->assertCount(1, $members);
         $this->assertSame(WorkspaceRole::Owner, $members[0]->getRole());
-        $this->assertSame("ws-{$uid}'s workspace", $members[0]->getWorkspace()?->getName());
+        $this->assertSame("My Workspace {$uid}", $members[0]->getWorkspace()?->getName());
+        $this->assertNotNull($members[0]->getWorkspace()?->getSlug());
     }
 
     public function testRegistrationDisabledInSelfHostedMode(): void
