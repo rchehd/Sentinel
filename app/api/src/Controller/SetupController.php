@@ -10,7 +10,6 @@ use App\Enum\UserRole;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -23,7 +22,7 @@ class SetupController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly UserRepository $userRepository,
-        #[Autowire('%env(APP_MODE)%')]
+        #[\Symfony\Component\DependencyInjection\Attribute\Autowire('%env(APP_MODE)%')]
         private readonly string $appMode,
     ) {
     }

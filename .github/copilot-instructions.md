@@ -78,7 +78,6 @@ make api-shell                         # Shell into API container
 make api-console <command>             # Run Symfony console command
 make db-migrate                        # Run Doctrine migrations
 make db-reset                          # Drop + recreate + migrate (destructive)
-make db-seed                           # Load fixtures
 ```
 
 Run a single test from inside the container:
@@ -162,7 +161,7 @@ Xdebug is installed only in the `dev` Docker stage (not in production). Configur
 
 ### Multi-tenancy
 
-All data is scoped to an **Organization**. Every query and mutation must respect organization isolation.
+All data is scoped to a **Workspace**. Every query and mutation must respect workspace isolation.
 
 ### Form Hierarchy (Composite Pattern)
 
@@ -185,6 +184,46 @@ Templating uses `{{ form.field_name }}`, `{{ system.date }}`, `{{ current_user.e
 
 - **Lookup** (synchronous): real-time data fetching for dropdowns/autofill, cache results
 - **Execution** (asynchronous): post-submission actions via Symfony Messenger queue (email, webhooks, CRM push)
+
+## Coding Conventions
+
+### PHP (Backend)
+
+- All PHP files start with `declare(strict_types=1);`
+- Entities use UUID primary keys via Symfony UID + `doctrine.uuid_generator`:
+  ```php
+  #[ORM\Column(type: UuidType::NAME, unique: true)]
+  #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+  #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+  private ?Uuid $id = null;
+  ```
+- All entities use `TimestampableTrait` for `createdAt`/`updatedAt`
+- Serialization is controlled via `#[Groups(['entity:read', 'entity:write'])]` on entity properties
+- Controllers use `#[MapRequestPayload]` to bind and validate request bodies into DTOs; DTOs use Symfony Assert constraints
+- Controllers use `#[CurrentUser]` attribute to inject the authenticated user
+- Controllers return `$this->json($data, context: ['groups' => ['entity:read']])` — never raw arrays
+- PHPStan level 6 is enforced; avoid `mixed` types and unsafe dynamic access
+
+### PHPUnit Tests
+
+API tests extend `Symfony\Bundle\FrameworkBundle\Test\WebTestCase` and create all test data in-memory via helper methods (no fixtures):
+```php
+$client = static::createClient();
+$user = $this->createActiveUser('unique-prefix-' . uniqid());
+$workspace = $this->createWorkspaceForUser($user, 'WS Name');
+$client->loginUser($user);
+$client->request('GET', '/api/workspaces/' . $workspace->getId() . '/forms', [], [], [
+    'HTTP_ACCEPT' => 'application/json',
+]);
+$this->assertResponseIsSuccessful();
+```
+
+### TypeScript (Frontend)
+
+- Shared types live in `packages/types/` (currently a placeholder — define types there when adding cross-package contracts)
+- App mode is consumed via `useModeContext()` hook from `ModeContext`; components should branch on `AppMode: 'saas' | 'self_hosted'`
+- Toast notifications use the `useToast()` hook from `components/toast/`
+- All new pages go in `pages/` and must be lazy-loaded via `React.lazy()` in `App.tsx`
 
 ## MCP Servers
 

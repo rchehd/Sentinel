@@ -88,7 +88,24 @@
     "generatedPassword": "Wygenerowane hasło — udostępnij je użytkownikowi:",
     "copyPassword": "Kopiuj",
     "copiedPassword": "Skopiowano!",
-    "noUsers": "Brak użytkowników."
+    "noUsers": "Brak użytkowników.",
+    "roles": "Role",
+    "status": "Status",
+    "roleSuperAdmin": "Super Admin",
+    "roleUser": "Użytkownik",
+    "active": "Aktywny",
+    "inactive": "Nieaktywny",
+    "mustChangePw": "Zmiana hasła"
+  },
+  "setup": {
+    "title": "Utwórz konto administratora",
+    "description": "Skonfiguruj pierwsze konto administratora, aby rozpocząć.",
+    "createAdminAccount": "Utwórz konto administratora",
+    "repeatPassword": "Powtórz hasło",
+    "alreadyConfigured": "Już skonfigurowano",
+    "alreadyConfiguredDesc": "Konto administratora już istnieje.",
+    "failed": "Konfiguracja nie powiodła się",
+    "successDesc": "Możesz się teraz zalogować."
   },
   "nav": {
     "home": "Strona główna",

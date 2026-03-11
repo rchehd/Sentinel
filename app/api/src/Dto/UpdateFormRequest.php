@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Dto;
 
+use App\Enum\FormStatus;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class UpdateFormRequest
@@ -17,8 +18,7 @@ class UpdateFormRequest
         public readonly ?string $title = null,
         #[Assert\Length(max: 2000)]
         public readonly ?string $description = null,
-        #[Assert\Choice(choices: ['draft', 'published', 'archived'])]
-        public readonly ?string $status = null,
+        public readonly ?FormStatus $status = null,
         public readonly ?array $schema = null,
     ) {
     }

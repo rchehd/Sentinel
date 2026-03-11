@@ -33,12 +33,14 @@ interface SsoButtonsProps {
 }
 
 export function SsoButtons({ googleLabel, githubLabel }: SsoButtonsProps) {
+  if (!import.meta.env.VITE_SSO_ENABLED) return null
+
   return (
     <Group grow>
-      <Button variant="default" leftSection={<GoogleIcon />} onClick={() => {}}>
+      <Button variant="default" leftSection={<GoogleIcon />}>
         {googleLabel}
       </Button>
-      <Button variant="default" leftSection={<GithubIcon />} onClick={() => {}}>
+      <Button variant="default" leftSection={<GithubIcon />}>
         {githubLabel}
       </Button>
     </Group>

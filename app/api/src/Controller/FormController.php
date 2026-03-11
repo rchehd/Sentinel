@@ -8,10 +8,10 @@ use App\Dto\CreateFormRequest;
 use App\Dto\UpdateFormRequest;
 use App\Entity\Form;
 use App\Entity\User;
-use App\Enum\FormStatus;
 use App\Repository\FormRepository;
 use App\Repository\WorkspaceRepository;
 use App\Security\FormVoter;
+use App\Security\WorkspaceVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -58,7 +58,7 @@ class FormController extends AbstractController
             return $this->json(['error' => 'Workspace not found.'], Response::HTTP_NOT_FOUND);
         }
 
-        $this->denyAccessUnlessGranted(FormVoter::EDIT, $this->makeDummyForm($workspace));
+        $this->denyAccessUnlessGranted(WorkspaceVoter::FORM_CREATE, $workspace);
 
         $form = new Form();
         $form->setWorkspace($workspace);
@@ -112,7 +112,7 @@ class FormController extends AbstractController
         }
 
         if (null !== $dto->status) {
-            $form->setStatus(FormStatus::from($dto->status));
+            $form->setStatus($dto->status);
         }
 
         if (null !== $dto->schema) {
@@ -150,17 +150,5 @@ class FormController extends AbstractController
         }
 
         return $form;
-    }
-
-    /**
-     * Creates a transient Form bound to the workspace solely for the voter check on creation.
-     * The form is never persisted.
-     */
-    private function makeDummyForm(\App\Entity\Workspace $workspace): Form
-    {
-        $dummy = new Form();
-        $dummy->setWorkspace($workspace);
-
-        return $dummy;
     }
 }

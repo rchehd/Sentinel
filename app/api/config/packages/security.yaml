@@ -28,6 +28,7 @@ security:
     # Note: Only the *first* matching rule is applied
     access_control:
         - { path: ^/api/admin, roles: ROLE_SUPER_ADMIN }
+        - { path: ^/api/me, roles: ROLE_USER }
         - { path: ^/api/password, roles: ROLE_USER }
         - { path: ^/api/workspaces, roles: ROLE_USER }
 

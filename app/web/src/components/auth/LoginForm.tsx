@@ -17,8 +17,8 @@ import { SsoButtons } from './SsoButtons'
 import { useToast } from '@/components/toast'
 import { SentinelLogo } from '@/components/logo'
 import { useModeContext } from '@/context/ModeContext'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
+import { useAuth } from '@/context/AuthContext'
+import { apiFetch } from '@/lib/api'
 
 export function LoginForm() {
   const { t } = useTranslation()
@@ -36,6 +36,8 @@ export function LoginForm() {
 
   const clearError = (field: string) =>
     setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev))
+
+  const { setUser } = useAuth()
 
   useEffect(() => {
     if (activation === 'success') {
@@ -61,11 +63,9 @@ export function LoginForm() {
     setLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/api/login`, {
+      const res = await apiFetch('/api/login', {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        json: { email, password },
       })
 
       if (!res.ok) {
@@ -79,6 +79,7 @@ export function LoginForm() {
       }
 
       const data = await res.json()
+      setUser(data)
 
       if (data.mustChangePassword) {
         navigate('/change-password', { replace: true })
@@ -86,7 +87,7 @@ export function LoginForm() {
       }
 
       showToast('success', t('auth.accessGranted'), t('auth.welcomeBack'))
-      setTimeout(() => navigate('/home', { replace: true }), 1500)
+      navigate('/home', { replace: true })
     } catch (err) {
       const message = err instanceof Error ? err.message : t('common.error')
       showToast('error', t('auth.authenticationFailed'), message)
@@ -114,7 +115,9 @@ export function LoginForm() {
       {!isSelfHosted && (
         <>
           <SsoButtons googleLabel={t('auth.ssoGoogle')} githubLabel={t('auth.ssoGithub')} />
-          <Divider label={t('common.or')} labelPosition="center" my="lg" />
+          {import.meta.env.VITE_SSO_ENABLED && (
+            <Divider label={t('common.or')} labelPosition="center" my="lg" />
+          )}
         </>
       )}
 

@@ -44,7 +44,7 @@ class WorkspaceMemberController extends AbstractController
 
         $this->denyAccessUnlessGranted(WorkspaceVoter::VIEW, $workspace);
 
-        return $this->json($this->serializeMembers($workspace));
+        return $this->json($workspace->getMembers(), context: ['groups' => ['workspace_member:read']]);
     }
 
     #[Route('', name: 'api_workspace_members_add', methods: ['POST'])]
@@ -83,7 +83,7 @@ class WorkspaceMemberController extends AbstractController
 
         $this->em->flush();
 
-        return $this->json($this->serializeMember($member), Response::HTTP_CREATED);
+        return $this->json($member, Response::HTTP_CREATED, [], ['groups' => ['workspace_member:read']]);
     }
 
     #[Route('/{memberId}', name: 'api_workspace_members_update', methods: ['PATCH'])]
@@ -106,7 +106,7 @@ class WorkspaceMemberController extends AbstractController
             return $this->json(['error' => 'Member not found.'], Response::HTTP_NOT_FOUND);
         }
 
-        $newRole = WorkspaceRole::from($dto->role);
+        $newRole = $dto->role;
 
         // Protect against demoting the last owner
         if (WorkspaceRole::Owner === $member->getRole() && WorkspaceRole::Owner !== $newRole) {
@@ -126,7 +126,7 @@ class WorkspaceMemberController extends AbstractController
         $member->setRole($newRole);
         $this->em->flush();
 
-        return $this->json($this->serializeMember($member));
+        return $this->json($member, context: ['groups' => ['workspace_member:read']]);
     }
 
     #[Route('/{memberId}', name: 'api_workspace_members_remove', methods: ['DELETE'])]
@@ -152,7 +152,6 @@ class WorkspaceMemberController extends AbstractController
         if (!$isSelf) {
             $this->denyAccessUnlessGranted(WorkspaceVoter::MANAGE_MEMBERS, $workspace);
         } else {
-            // Self-leave: still requires VIEW access (must be a member)
             $this->denyAccessUnlessGranted(WorkspaceVoter::VIEW, $workspace);
         }
 
@@ -186,26 +185,5 @@ class WorkspaceMemberController extends AbstractController
         }
 
         return $workspace;
-    }
-
-    /** @return array<int, array<string, mixed>> */
-    private function serializeMembers(Workspace $workspace): array
-    {
-        return $workspace->getMembers()->map(
-            fn (WorkspaceMember $m) => $this->serializeMember($m),
-        )->toArray();
-    }
-
-    /** @return array<string, mixed> */
-    private function serializeMember(WorkspaceMember $member): array
-    {
-        return [
-            'id' => (string) $member->getId(),
-            'userId' => (string) $member->getUser()?->getId(),
-            'username' => $member->getUser()?->getUsername(),
-            'email' => $member->getUser()?->getEmail(),
-            'role' => $member->getRole()->value,
-            'joinedAt' => $member->getJoinedAt()->format(\DateTimeInterface::ATOM),
-        ];
     }
 }

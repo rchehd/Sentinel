@@ -42,6 +42,20 @@ class WorkspaceController extends AbstractController
         #[CurrentUser] User $user,
         #[MapRequestPayload] CreateWorkspaceRequest $dto,
     ): JsonResponse {
+        if (null !== $this->workspaceRepository->findOneBy(['name' => $dto->name])) {
+            return $this->json(
+                ['errors' => ['name' => 'This workspace name is already taken.']],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
+        if (null !== $dto->slug && null !== $this->workspaceRepository->findOneBy(['slug' => $dto->slug])) {
+            return $this->json(
+                ['errors' => ['slug' => 'This slug is already taken.']],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
         $workspace = new Workspace();
         $workspace->setName($dto->name);
 

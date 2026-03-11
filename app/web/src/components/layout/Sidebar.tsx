@@ -10,8 +10,6 @@ export function Sidebar() {
   const links = [
     { label: t('nav.home'), href: '/home' },
     { label: t('nav.dashboard'), href: '/dashboard' },
-    { label: t('nav.settings'), href: '/settings' },
-    { label: t('nav.profile'), href: '/profile' },
   ]
 
   return (
