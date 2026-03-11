@@ -19,23 +19,23 @@ Feature: Startup flow
     Given the app is not configured
     And I navigate to "/setup/admin"
     When I click "Create admin account"
-    Then I see field error "Email is required."
-    And I see field error "Username is required."
-    And I see field error "Password is required."
+    Then I see field error "Please enter your email address"
+    And I see field error "Please choose a username"
+    And I see field error "Please enter your password"
 
   Scenario: Password too short shows validation error
     Given the app is not configured
     And I navigate to "/setup/admin"
     When I fill the setup form with email "admin@example.com" username "admin" password "short" and confirm "short"
     And I click "Create admin account"
-    Then I see field error "Password must be at least 8 characters."
+    Then I see field error "Password must be at least 8 characters"
 
   Scenario: Mismatched passwords show validation error
     Given the app is not configured
     And I navigate to "/setup/admin"
     When I fill the setup form with email "admin@example.com" username "admin" password "Password123" and confirm "Password999"
     And I click "Create admin account"
-    Then I see field error "Passwords do not match."
+    Then I see field error "Passwords don't match"
 
   Scenario: Successful admin creation redirects to login
     Given the app is not configured

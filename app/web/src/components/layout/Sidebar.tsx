@@ -7,8 +7,11 @@ export function Sidebar() {
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
-  const { workspace } = useWorkspace()
-  const base = `/${workspace.slug}`
+  const workspaceCtx = useWorkspace()
+
+  if (!workspaceCtx) return null
+
+  const base = `/${workspaceCtx.workspace.slug}`
 
   const links = [
     { label: t('nav.home'), href: `${base}/home` },

@@ -70,10 +70,8 @@ interface WorkspaceContextValue {
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)
 
-export function useWorkspace(): WorkspaceContextValue {
-  const ctx = useContext(WorkspaceContext)
-  if (!ctx) throw new Error('useWorkspace must be used inside WorkspaceLayout')
-  return ctx
+export function useWorkspace(): WorkspaceContextValue | null {
+  return useContext(WorkspaceContext)
 }
 
 /** Layout route: resolves :slug → Workspace and provides it via context. */
