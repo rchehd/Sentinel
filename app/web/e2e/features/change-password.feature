@@ -1,7 +1,10 @@
 Feature: Change Password
 
   Background:
-    Given I navigate to "/change-password"
+    Given the app is configured
+    And I am authenticated as a user
+    And the workspaces API returns a workspace with slug "test-workspace"
+    And I navigate to "/change-password"
 
   Scenario: Change password form renders correctly
     Then I see the heading "Set new password"
@@ -29,7 +32,7 @@ Feature: Change Password
     When I fill the change password form with "newpassword1" and "newpassword1"
     And I click "Set password"
     Then I see an alert containing "Password updated"
-    And I am redirected to "/home"
+    And I am redirected to "/test-workspace/home"
 
   Scenario: API error shows an error alert
     Given the change password API returns error with code "password_mismatch"

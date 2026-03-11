@@ -6,8 +6,7 @@ import { useMediaQuery } from '@mantine/hooks'
 import { AuthLayout } from '@/components/auth'
 import { useToast } from '@/components/toast'
 import { SentinelLogo } from '@/components/logo'
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
+import { apiFetch } from '@/lib/api'
 
 export function ChangePasswordPage() {
   const { t } = useTranslation()
@@ -41,9 +40,8 @@ export function ChangePasswordPage() {
     setLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/api/password/change`, {
+      const res = await apiFetch('/api/password/change', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newPassword, confirmPassword }),
       })
@@ -59,7 +57,11 @@ export function ChangePasswordPage() {
       }
 
       showToast('success', t('auth.passwordChanged'), t('auth.changePasswordSuccess'))
-      navigate('/home', { replace: true })
+
+      const workspacesRes = await apiFetch('/api/workspaces')
+      const workspaces: { slug: string }[] = workspacesRes.ok ? await workspacesRes.json() : []
+      const slug = workspaces[0]?.slug
+      navigate(slug ? `/${slug}/home` : '/login', { replace: true })
     } catch (err) {
       const message = err instanceof Error ? err.message : t('common.error')
       showToast('error', t('auth.changePasswordFailed'), message)

@@ -56,11 +56,13 @@ Feature: Startup flow
     And I navigate to "/login"
     When I submit the login form with email "admin@example.com" and password "Password123"
     Then I see an alert containing "Access Granted"
-    And I am redirected to "/home"
+    And I am redirected to "/test-workspace/home"
     And I see the heading "Welcome to Sentinel"
 
   Scenario: Sign out returns to login page
     Given the app is configured
-    And I navigate to "/home"
+    And I am authenticated as a user
+    And the workspaces API returns a workspace with slug "test-workspace"
+    And I navigate to "/test-workspace/home"
     When I click "Log out"
     Then the page URL is "/login"
