@@ -7,6 +7,8 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use App\Enum\UserRole;
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -68,17 +70,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:write'])]
     private ?string $password = null;
 
-    #[ORM\ManyToOne(targetEntity: Organization::class, inversedBy: 'members')]
-    #[ORM\JoinColumn(nullable: true)]
-    #[Groups(['user:read', 'user:write'])]
-    private ?Organization $organization = null;
-
     #[ORM\Column(options: ['default' => false])]
     #[Groups(['user:read'])]
     private bool $isActive = false;
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $activationToken = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    #[Groups(['user:read'])]
+    private bool $mustChangePassword = false;
+
+    /** @var Collection<int, WorkspaceMember> */
+    #[ORM\OneToMany(targetEntity: WorkspaceMember::class, mappedBy: 'user')]
+    private Collection $workspaceMemberships;
+
+    public function __construct()
+    {
+        $this->workspaceMemberships = new ArrayCollection();
+    }
 
     public function getId(): ?Uuid
     {
@@ -196,15 +206,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getOrganization(): ?Organization
+    public function isMustChangePassword(): bool
     {
-        return $this->organization;
+        return $this->mustChangePassword;
     }
 
-    public function setOrganization(?Organization $organization): static
+    public function setMustChangePassword(bool $mustChangePassword): static
     {
-        $this->organization = $organization;
+        $this->mustChangePassword = $mustChangePassword;
 
         return $this;
+    }
+
+    /** @return Collection<int, WorkspaceMember> */
+    public function getWorkspaceMemberships(): Collection
+    {
+        return $this->workspaceMemberships;
     }
 }

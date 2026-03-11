@@ -1,0 +1,126 @@
+# Sentinel — Self-Hosted Production Compose File
+#
+# Usage (localhost, Caddy internal CA):
+#   docker compose -f deploy/selfhosted/docker-compose.yml up -d
+#
+# Usage (real domain, Caddy fetches Let's Encrypt automatically):
+#   DOMAIN=myapp.com APP_SECRET=changeme docker compose -f deploy/selfhosted/docker-compose.yml up -d
+#
+# IMPORTANT: Before deploying to production, set strong values for:
+#   - POSTGRES_PASSWORD (default: sentinel_secret)
+#   - APP_SECRET        (default: change-me-in-production)
+
+services:
+  # ========================================
+  # Caddy reverse proxy (gateway)
+  # ========================================
+  caddy:
+    image: ghcr.io/rchehd/sentinel-caddy:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+
+  # ========================================
+  # Symfony API (FrankenPHP) — auto-migrates on startup
+  # ========================================
+  api:
+    image: ghcr.io/rchehd/sentinel-api:latest
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: prod
+      APP_MODE: self_hosted
+      # IMPORTANT: Set a random secret before deploying to production
+      APP_SECRET: ${APP_SECRET:-change-me-in-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel_secret}@database:5432/${POSTGRES_DB:-sentinel}?serverVersion=16&charset=utf8
+      REDIS_URL: redis://redis:6379
+      MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
+      CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-https://localhost}
+      SERVER_NAME: ${SERVER_NAME:-:80}
+      FRANKENPHP_CONFIG: "worker ./public/index.php"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ========================================
+  # Messenger Worker (async jobs)
+  # ========================================
+  worker:
+    image: ghcr.io/rchehd/sentinel-api:latest
+    restart: unless-stopped
+    command: php bin/console messenger:consume async failed --time-limit=3600 --memory-limit=256M -vv
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: prod
+      APP_MODE: self_hosted
+      APP_SECRET: ${APP_SECRET:-change-me-in-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel_secret}@database:5432/${POSTGRES_DB:-sentinel}?serverVersion=16&charset=utf8
+      REDIS_URL: redis://redis:6379
+      MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
+
+  # ========================================
+  # React Frontend
+  # ========================================
+  web:
+    image: ghcr.io/rchehd/sentinel-web:latest
+    restart: unless-stopped
+
+  # ========================================
+  # PostgreSQL with pgvector
+  # Vector extension is installed via Doctrine migration on first startup.
+  # ========================================
+  database:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sentinel}
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      # IMPORTANT: Change this password before deploying to production
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel_secret}
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-sentinel}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================
+  # Redis (cache + queue)
+  # ========================================
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  caddy_data:
+  caddy_config:
+  database_data:
+  redis_data:

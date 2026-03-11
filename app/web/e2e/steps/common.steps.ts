@@ -34,7 +34,7 @@ Then('I see field error {string}', async ({ page }, text: string) => {
 });
 
 Then('I see an alert containing {string}', async ({ page }, text: string) => {
-  await expect(page.getByRole('alert')).toContainText(text);
+  await expect(page.getByRole('alert').filter({ hasText: text })).toBeVisible();
 });
 
 Then('the {string} field is visible', async ({ page }, name: string) => {

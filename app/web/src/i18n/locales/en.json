@@ -69,7 +69,26 @@
     "ssoGithub": "GitHub",
     "accessGranted": "Access Granted",
     "authenticationFailed": "Authentication Failed",
-    "registrationFailed": "Registration Failed"
+    "registrationFailed": "Registration Failed",
+    "changePassword": "Set new password",
+    "changePasswordDesc": "A new password is required before you can access your account.",
+    "newPassword": "New password",
+    "passwordChanged": "Password updated",
+    "changePasswordSuccess": "Your new password has been saved.",
+    "changePasswordFailed": "Failed to update password",
+    "setPassword": "Set password"
+  },
+  "admin": {
+    "users": "Users",
+    "createUser": "Create user",
+    "generatePassword": "Generate password",
+    "requirePasswordChange": "Require password change on first login",
+    "userCreated": "User created",
+    "userCreatedDesc": "The account has been created successfully.",
+    "generatedPassword": "Generated password — share this with the user:",
+    "copyPassword": "Copy",
+    "copiedPassword": "Copied!",
+    "noUsers": "No users yet."
   },
   "nav": {
     "home": "Home",
@@ -85,6 +104,9 @@
   "errors": {
     "invalid_credentials": "Invalid email or password.",
     "account_not_activated": "Account is not activated. Please check your email.",
-    "org_label_required": "Organization name is required."
+    "org_label_required": "Organization name is required.",
+    "password_mismatch": "Passwords do not match.",
+    "invalid_current_password": "Current password is incorrect.",
+    "current_password_required": "Current password is required."
   }
 }
