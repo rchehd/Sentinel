@@ -93,8 +93,6 @@ function AuthGuard() {
 // ---------------------------------------------------------------------------
 
 function App() {
-  const { t } = useTranslation()
-
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoader variant="route" visible />}>
