@@ -37,7 +37,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          dockerfile: docker/caddy/Dockerfile
+          file: docker/caddy/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -70,7 +70,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          dockerfile: docker/api/Dockerfile
+          file: docker/api/Dockerfile
           target: prod
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -104,7 +104,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          dockerfile: docker/web/Dockerfile
+          file: docker/web/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
