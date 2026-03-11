@@ -6,7 +6,6 @@ namespace App\Security;
 
 use App\Entity\Form;
 use App\Entity\User;
-use App\Entity\Workspace;
 use App\Enum\WorkspaceRole;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
