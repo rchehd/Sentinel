@@ -13,4 +13,9 @@ RUN npm run build
 FROM caddy:2-alpine AS prod
 
 COPY docker/web/Caddyfile /etc/caddy/Caddyfile
+COPY docker/web/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 COPY --from=build /app/dist /srv
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

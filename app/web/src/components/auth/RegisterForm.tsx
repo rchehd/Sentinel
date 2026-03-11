@@ -18,7 +18,7 @@ import { SsoButtons } from './SsoButtons'
 import { useToast } from '@/components/toast'
 import { SentinelLogo } from '@/components/logo'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.sentinel.localhost'
+import { apiFetch } from '@/lib/api'
 
 export function RegisterForm() {
   const { t } = useTranslation()
@@ -59,17 +59,16 @@ export function RegisterForm() {
     setLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/api/register`, {
+      const res = await apiFetch('/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        json: {
           email,
           username,
           workspaceName,
           password,
           firstName: firstName || null,
           lastName: lastName || null,
-        }),
+        },
       })
 
       if (!res.ok) {

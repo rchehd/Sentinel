@@ -48,6 +48,11 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel_secret}@database:5432/${POSTGRES_DB:-sentinel}?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
+      MAILER_FROM: ${MAILER_FROM:-noreply@localhost}
+      # IMPORTANT: Change this JWT secret before deploying to production
+      MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET:-change-me-mercure-secret}
+      MERCURE_URL: http://localhost/.well-known/mercure
+      MERCURE_PUBLIC_URL: https://api.${DOMAIN:-localhost}/.well-known/mercure
       CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-https://localhost}
       SERVER_NAME: ${SERVER_NAME:-:80}
       FRANKENPHP_CONFIG: "worker ./public/index.php"
@@ -77,6 +82,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel_secret}@database:5432/${POSTGRES_DB:-sentinel}?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
+      MAILER_FROM: ${MAILER_FROM:-noreply@localhost}
+      MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET:-change-me-mercure-secret}
 
   # ========================================
   # React Frontend
@@ -84,6 +91,8 @@ services:
   web:
     image: ghcr.io/rchehd/sentinel-web:latest
     restart: unless-stopped
+    environment:
+      API_URL: https://api.${DOMAIN:-localhost}
 
   # ========================================
   # PostgreSQL with pgvector

@@ -30,7 +30,7 @@ class Workspace
     #[Groups(['workspace:read'])]
     private ?Uuid $id = null;
 
-    #[ORM\Column(length: 255, unique: true)]
+    #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
     #[Groups(['workspace:read', 'workspace:write'])]
