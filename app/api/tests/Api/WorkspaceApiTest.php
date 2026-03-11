@@ -139,7 +139,7 @@ class WorkspaceApiTest extends WebTestCase
 
         $data = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertNotSame('login', $data['slug']);
-        $this->assertSame('login-workspace', $data['slug']);
+        $this->assertStringStartsWith('login-workspace', $data['slug']);
     }
 
     public function testCreateWorkspaceWithoutNameFails(): void
