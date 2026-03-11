@@ -16,6 +16,8 @@ class AdminUserApiTest extends WebTestCase
     public function testUnauthenticatedCannotListUsers(): void
     {
         $client = static::createClient();
+        // Ensure at least one user exists so SetupWizardSubscriber doesn't intercept
+        $this->createActiveUser(uniqid());
 
         $client->request('GET', '/api/admin/users');
 
