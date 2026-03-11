@@ -27,9 +27,14 @@ export class RegisterPage {
     this.signInButton = page.getByRole('button', { name: 'Sign In' });
   }
 
-  async fill(email: string, username: string, password: string, confirm: string) {
+  get workspaceNameInput(): Locator {
+    return this.page.getByLabel('Workspace name');
+  }
+
+  async fill(email: string, username: string, password: string, confirm: string, workspaceName = 'Test Workspace') {
     await this.emailInput.fill(email);
     await this.usernameInput.fill(username);
+    await this.workspaceNameInput.fill(workspaceName);
     await this.passwordInput.fill(password);
     await this.confirmPasswordInput.fill(confirm);
   }

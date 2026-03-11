@@ -63,6 +63,35 @@ class AuthApiTest extends WebTestCase
         $this->assertNotNull($members[0]->getWorkspace()?->getSlug());
     }
 
+    public function testRegisterWithoutWorkspaceNameFallsBackToDefault(): void
+    {
+        $client = static::createClient();
+        $uid = uniqid();
+
+        $client->request('POST', '/api/register', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], (string) json_encode([
+            'email' => "fb-{$uid}@example.com",
+            'username' => "fb-{$uid}",
+            'password' => 'TestPassword123!',
+        ]));
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $em->getRepository(User::class)->findOneBy(['email' => "fb-{$uid}@example.com"]);
+        $this->assertNotNull($user);
+
+        /** @var WorkspaceMemberRepository $memberRepo */
+        $memberRepo = static::getContainer()->get(WorkspaceMemberRepository::class);
+        $members = $memberRepo->findBy(['user' => $user]);
+
+        $this->assertCount(1, $members);
+        $this->assertSame("fb-{$uid}'s workspace", $members[0]->getWorkspace()?->getName());
+        $this->assertNotNull($members[0]->getWorkspace()?->getSlug());
+    }
+
     public function testRegistrationDisabledInSelfHostedMode(): void
     {
         $_ENV['APP_MODE'] = 'self_hosted';

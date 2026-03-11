@@ -30,7 +30,7 @@ Feature: Login
     Given the login API returns 200
     When I submit the login form with email "user@example.com" and password "password123"
     Then I see an alert containing "Access Granted"
-    And I am redirected to "/home"
+    And I am redirected to "/test-workspace/home"
 
   Scenario: Sign Up button navigates to the register page
     When I click "Sign Up"

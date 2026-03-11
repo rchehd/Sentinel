@@ -1,7 +1,9 @@
 Feature: Home
 
   Background:
-    Given I navigate to "/home"
+    Given I am authenticated as a user
+    And the workspaces API returns a workspace with slug "test-workspace"
+    And I navigate to "/test-workspace/home"
 
   Scenario: Welcome heading is rendered
     Then I see the heading "Welcome to Sentinel"

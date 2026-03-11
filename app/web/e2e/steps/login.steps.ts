@@ -18,6 +18,13 @@ Given('the login API returns 200', async ({ page }) => {
       body: JSON.stringify({}),
     }),
   );
+  await page.route('**/api/workspaces', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{ id: 'ws-id', name: 'Test Workspace', slug: 'test-workspace' }]),
+    }),
+  );
 });
 
 When(
