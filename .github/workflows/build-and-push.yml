@@ -56,7 +56,8 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/sentinel-caddy
           tags: |
             type=semver,pattern={{version}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/master' }}
 
       - uses: docker/build-push-action@v6
         with:
@@ -91,7 +92,8 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/sentinel-api
           tags: |
             type=semver,pattern={{version}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/master' }}
 
       - uses: docker/build-push-action@v6
         with:
@@ -127,7 +129,8 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/sentinel-web
           tags: |
             type=semver,pattern={{version}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/master' }}
 
       - uses: docker/build-push-action@v6
         with:
