@@ -1,7 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { Navigate, Outlet, useParams } from 'react-router-dom'
-import { PageLoader } from '@/components/loader'
 import { apiFetch } from '@/lib/api'
 
 export interface Workspace {
@@ -79,7 +78,7 @@ export function WorkspaceLayout() {
   const { slug } = useParams<{ slug: string }>()
   const { workspaces, loading } = useWorkspaces()
 
-  if (loading) return <PageLoader variant="full" visible />
+  if (loading) return null
 
   const workspace = workspaces.find((w) => w.slug === slug)
   if (!workspace) return <Navigate to="/login" replace />

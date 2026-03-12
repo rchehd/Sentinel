@@ -1,5 +1,6 @@
 import { createContext, lazy, Suspense, useContext, useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { PageLoader } from '@/components/loader'
 import { type AppMode, ModeContext } from '@/context/ModeContext'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
@@ -27,21 +28,40 @@ const ChangePasswordPage = lazy(() =>
 const AdminUsersPage = lazy(() =>
   import('@/pages/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
 )
+const FormsPage = lazy(() =>
+  import('@/pages/FormsPage').then((m) => ({ default: m.FormsPage })),
+)
 
 // ---------------------------------------------------------------------------
 // Setup context — shared between the provider and route guards below
 // ---------------------------------------------------------------------------
 
 interface SetupState {
-  configured: boolean
+  configured: boolean | null  // null = still checking
   mode: AppMode | null
 }
 
-const SetupContext = createContext<SetupState>({ configured: true, mode: null })
+const SetupContext = createContext<SetupState>({ configured: null, mode: null })
 
+/**
+ * Fetches /api/setup/status on mount and exposes the result via SetupContext.
+ *
+ * Rendering strategy — parallel initialisation with a single overlay:
+ *  1. Children are rendered immediately so AuthProvider's /api/me and
+ *     WorkspacesProvider's /api/workspaces requests fire in parallel with the
+ *     setup check rather than sequentially.
+ *  2. A full-screen PageLoader overlays everything while the setup check is in
+ *     flight. loaderVisible is decoupled from `configured` with a 150 ms delay
+ *     so that lazy-loaded JS chunks (triggered when `configured` flips) finish
+ *     loading before the overlay fades out — preventing a white-screen flash.
+ *  3. Suspense fallback is null: the overlay already covers any suspension that
+ *     occurs during the initial render; a separate Suspense spinner would bleed
+ *     through as the overlay fades and cause a visible text-then-spinner flicker.
+ */
 function SetupProvider({ children }: { children: React.ReactNode }) {
-  const [checked, setChecked] = useState(false)
-  const [state, setState] = useState<SetupState>({ configured: true, mode: null })
+  const { t } = useTranslation()
+  const [state, setState] = useState<SetupState>({ configured: null, mode: null })
+  const [loaderVisible, setLoaderVisible] = useState(true)
   const didCheck = useRef(false)
 
   useEffect(() => {
@@ -51,18 +71,26 @@ function SetupProvider({ children }: { children: React.ReactNode }) {
     apiFetch('/api/setup/status')
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { configured: boolean; mode: AppMode } | null) => {
-        if (data) setState({ configured: data.configured, mode: data.mode })
+        setState(data ? { configured: data.configured, mode: data.mode } : { configured: true, mode: null })
+        // Small delay so lazy chunks finish loading before the overlay fades out,
+        // preventing a white-screen flash between the two loading phases.
+        setTimeout(() => setLoaderVisible(false), 150)
       })
-      .catch(() => {})
-      .finally(() => setChecked(true))
+      .catch(() => {
+        setState({ configured: true, mode: null })
+        setTimeout(() => setLoaderVisible(false), 150)
+      })
   }, [])
 
-  if (!checked) return <PageLoader variant="full" visible />
-
   return (
-    <SetupContext.Provider value={state}>
-      <ModeContext.Provider value={{ mode: state.mode }}>{children}</ModeContext.Provider>
-    </SetupContext.Provider>
+    <>
+      <PageLoader variant="full" visible={loaderVisible} text={t('common.initializingCore')} />
+      <SetupContext.Provider value={state}>
+        <ModeContext.Provider value={{ mode: state.mode }}>
+          <Suspense fallback={null}>{children}</Suspense>
+        </ModeContext.Provider>
+      </SetupContext.Provider>
+    </>
   )
 }
 
@@ -73,19 +101,21 @@ function SetupProvider({ children }: { children: React.ReactNode }) {
 /** Only accessible when setup has NOT been completed yet. */
 function SetupOnlyRoute() {
   const { configured } = useContext(SetupContext)
+  if (configured === null) return null
   return configured ? <Navigate to="/login" replace /> : <Outlet />
 }
 
 /** Only accessible when setup IS complete. */
 function ConfiguredRoute() {
   const { configured } = useContext(SetupContext)
+  if (configured === null) return null
   return configured ? <Outlet /> : <Navigate to="/setup/admin" replace />
 }
 
 /** Only accessible when the user is authenticated. Redirects to /login otherwise. */
 function AuthGuard() {
   const { user, loading } = useAuth()
-  if (loading) return <PageLoader variant="full" visible />
+  if (loading) return null
   return user ? <Outlet /> : <Navigate to="/login" replace />
 }
 
@@ -96,9 +126,8 @@ function AuthGuard() {
 function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<PageLoader variant="route" visible />}>
-        <SetupProvider>
-          <AuthProvider>
+      <SetupProvider>
+        <AuthProvider>
             <Routes>
               <Route element={<SetupOnlyRoute />}>
                 <Route path="/setup/admin" element={<SetupPage />} />
@@ -116,6 +145,7 @@ function App() {
                       <Route index element={<Navigate to="home" replace />} />
                       <Route path="home" element={<HomePage />} />
                       <Route path="dashboard" element={<DashboardPage />} />
+                      <Route path="forms" element={<FormsPage />} />
                     </Route>
                   </Route>
                   <Route path="/change-password" element={<ChangePasswordPage />} />
@@ -126,8 +156,7 @@ function App() {
               </Route>
             </Routes>
           </AuthProvider>
-        </SetupProvider>
-      </Suspense>
+      </SetupProvider>
     </BrowserRouter>
   )
 }
