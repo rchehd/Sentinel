@@ -102,7 +102,6 @@ class FormController extends AbstractController
     public function update(
         string $workspaceId,
         string $formId,
-        #[CurrentUser] User $user,
         #[MapRequestPayload] UpdateFormRequest $dto,
     ): JsonResponse {
         $form = $this->findFormInWorkspace($workspaceId, $formId);
@@ -125,11 +124,8 @@ class FormController extends AbstractController
             $form->setStatus($dto->status);
         }
 
-        // Snapshot the updated metadata so this change is part of revision history
-        // and can be rolled back via the restore endpoint.
-        $revision = $this->createRevisionSnapshot($form, $user);
-        $this->em->persist($revision);
-        $form->setCurrentRevision($revision);
+        // Metadata changes (title, description, status) do not create a new revision.
+        // Revisions are only created when the form schema changes (see saveSchema).
         $this->em->flush();
 
         return $this->json($form, context: ['groups' => ['form:read']]);
@@ -496,25 +492,5 @@ class FormController extends AbstractController
             'status' => $form->getStatus()->value,
             'stages' => [],
         ];
-    }
-
-    /**
-     * Create an immutable revision snapshot of the form's current state.
-     *
-     * Copies schema from the current revision (if any) so that every PATCH
-     * to metadata still preserves the full state in history.
-     */
-    private function createRevisionSnapshot(Form $form, User $user): FormRevision
-    {
-        $revision = new FormRevision();
-        $revision->setForm($form);
-        $revision->setTitle($form->getTitle());
-        $revision->setDescription($form->getDescription());
-        $revision->setStatus($form->getStatus());
-        $revision->setSchema($form->getCurrentRevision()?->getSchema() ?? []);
-        $revision->setVersion($this->formRevisionRepository->getNextVersion($form));
-        $revision->setCreatedBy($user);
-
-        return $revision;
     }
 }

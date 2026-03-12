@@ -185,9 +185,8 @@ class FormApiTest extends WebTestCase
         $data = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertSame('New Title', $data['title']);
         $this->assertSame('published', $data['status']);
-        // PATCH now creates a revision snapshot, so currentRevision must be set
-        $this->assertNotNull($data['currentRevision']);
-        $this->assertSame(1, $data['currentRevision']['version']);
+        // Metadata-only PATCH does not create a revision; currentRevision stays null.
+        $this->assertNull($data['currentRevision']);
     }
 
     public function testViewerCannotUpdateForm(): void
