@@ -136,7 +136,22 @@
     "descriptionPlaceholder": "Opcjonalny opis",
     "status": "Status",
     "revision": "Wersja",
-    "createdAt": "Utworzono"
+    "createdAt": "Utworzono",
+    "editTitle": "Edytuj formularz",
+    "editSuccess": "Formularz \"{{title}}\" zaktualizowany.",
+    "editError": "Nie udało się zaktualizować formularza.",
+    "statusDraft": "Szkic",
+    "statusPublished": "Opublikowany",
+    "statusArchived": "Zarchiwizowany",
+    "exportJson": "Eksport JSON",
+    "exportYaml": "Eksport YAML",
+    "exportError": "Nie udało się wyeksportować formularza.",
+    "importTitle": "Importuj formularz",
+    "importButton": "Importuj",
+    "importSuccess": "Formularz \"{{title}}\" zaimportowany.",
+    "importError": "Nie udało się zaimportować formularza.",
+    "importFilePlaceholder": "Upuść plik .json lub .yaml tutaj lub kliknij, aby wybrać",
+    "importFileInvalid": "Wybierz plik .json lub .yaml."
   },
   "footer": {
     "privacy": "Polityka prywatności",

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Dto\CreateFormRequest;
+use App\Dto\ImportFormRequest;
 use App\Dto\SaveSchemaRequest;
 use App\Dto\UpdateFormRequest;
 use App\Entity\Form;
 use App\Entity\FormRevision;
 use App\Entity\User;
+use App\Enum\FormStatus;
 use App\Repository\FormRepository;
 use App\Repository\FormRevisionRepository;
 use App\Repository\WorkspaceRepository;
@@ -18,10 +20,13 @@ use App\Security\WorkspaceVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
 
 #[Route('/api/workspaces/{workspaceId}/forms')]
 class FormController extends AbstractController
@@ -185,6 +190,105 @@ class FormController extends AbstractController
         return $this->json($revisions, context: ['groups' => ['form:revision:read']]);
     }
 
+    /**
+     * Export a form as a JSON or YAML file download.
+     *
+     * Returns a structured document suitable for re-import on any instance.
+     * The `stages` key is empty until the form editor is implemented, but its
+     * presence ensures forward-compatibility with future schema exports.
+     */
+    #[Route('/{formId}/export', name: 'api_forms_export', methods: ['GET'])]
+    public function export(string $workspaceId, string $formId, Request $request): Response
+    {
+        $form = $this->findFormInWorkspace($workspaceId, $formId);
+
+        if ($form instanceof JsonResponse) {
+            return $form;
+        }
+
+        $this->denyAccessUnlessGranted(FormVoter::VIEW, $form);
+
+        $format = $request->query->getString('format', 'json');
+
+        if (!\in_array($format, ['json', 'yaml'], true)) {
+            return $this->json(['error' => 'Invalid format. Use json or yaml.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $data = $this->buildExportPayload($form);
+        $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($form->getTitle())) ?: 'form';
+
+        if ('yaml' === $format) {
+            $body = Yaml::dump($data, 4, 2);
+            $mime = 'application/yaml';
+            $filename = $slug . '.yaml';
+        } else {
+            $body = json_encode($data, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_UNICODE) ?: '{}';
+            $mime = 'application/json';
+            $filename = $slug . '.json';
+        }
+
+        return new Response($body, Response::HTTP_OK, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Import a form from a JSON or YAML string, creating a new Form entity.
+     *
+     * The payload must contain the `content` (raw file text) and `format`
+     * ('json' or 'yaml'). On success the newly created form is returned so
+     * the frontend can append it to the list immediately.
+     */
+    #[Route('/import', name: 'api_forms_import', methods: ['POST'])]
+    public function import(
+        string $workspaceId,
+        #[CurrentUser] User $user,
+        #[MapRequestPayload] ImportFormRequest $dto,
+    ): JsonResponse {
+        $workspace = $this->workspaceRepository->find($workspaceId);
+
+        if (null === $workspace) {
+            return $this->json(['error' => 'Workspace not found.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $this->denyAccessUnlessGranted(WorkspaceVoter::FORM_CREATE, $workspace);
+
+        try {
+            $data = match ($dto->format) {
+                'yaml' => Yaml::parse($dto->content),
+                default => json_decode($dto->content, true, 512, \JSON_THROW_ON_ERROR),
+            };
+        } catch (ParseException|\JsonException $e) {
+            return $this->json(['error' => 'Invalid file content: ' . $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        if (!\is_array($data) || !isset($data['title'])) {
+            return $this->json(['error' => 'Missing required field: title.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $form = new Form();
+        $form->setWorkspace($workspace);
+        $form->setCreatedBy($user);
+        $form->setTitle((string) $data['title']);
+
+        if (isset($data['description']) && \is_string($data['description'])) {
+            $form->setDescription($data['description']);
+        }
+
+        if (isset($data['status'])) {
+            $status = FormStatus::tryFrom((string) $data['status']);
+            if (null !== $status) {
+                $form->setStatus($status);
+            }
+        }
+
+        $this->em->persist($form);
+        $this->em->flush();
+
+        return $this->json($form, Response::HTTP_CREATED, [], ['groups' => ['form:read']]);
+    }
+
     private function findFormInWorkspace(string $workspaceId, string $formId): Form|JsonResponse
     {
         $form = $this->formRepository->find($formId);
@@ -194,5 +298,24 @@ class FormController extends AbstractController
         }
 
         return $form;
+    }
+
+    /**
+     * Build the canonical export document for a form.
+     *
+     * The `sentinel_version` field allows future parsers to handle
+     * breaking changes in the export schema gracefully.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildExportPayload(Form $form): array
+    {
+        return [
+            'sentinel_version' => '1.0',
+            'title' => $form->getTitle(),
+            'description' => $form->getDescription(),
+            'status' => $form->getStatus()->value,
+            'stages' => [],
+        ];
     }
 }

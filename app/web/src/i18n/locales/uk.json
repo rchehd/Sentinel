@@ -136,7 +136,22 @@
     "descriptionPlaceholder": "Необов'язковий опис",
     "status": "Статус",
     "revision": "Версія",
-    "createdAt": "Створено"
+    "createdAt": "Створено",
+    "editTitle": "Редагувати форму",
+    "editSuccess": "Форму \"{{title}}\" оновлено.",
+    "editError": "Не вдалося оновити форму.",
+    "statusDraft": "Чернетка",
+    "statusPublished": "Опублікована",
+    "statusArchived": "Архівована",
+    "exportJson": "Експорт JSON",
+    "exportYaml": "Експорт YAML",
+    "exportError": "Не вдалося експортувати форму.",
+    "importTitle": "Імпорт форми",
+    "importButton": "Імпортувати",
+    "importSuccess": "Форму \"{{title}}\" імпортовано.",
+    "importError": "Не вдалося імпортувати форму.",
+    "importFilePlaceholder": "Перетягніть .json або .yaml файл сюди, або натисніть для вибору",
+    "importFileInvalid": "Будь ласка, виберіть файл .json або .yaml."
   },
   "footer": {
     "privacy": "Політика конфіденційності",

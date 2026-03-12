@@ -136,7 +136,22 @@
     "descriptionPlaceholder": "Optional description",
     "status": "Status",
     "revision": "Revision",
-    "createdAt": "Created"
+    "createdAt": "Created",
+    "editTitle": "Edit Form",
+    "editSuccess": "Form \"{{title}}\" updated.",
+    "editError": "Failed to update form.",
+    "statusDraft": "Draft",
+    "statusPublished": "Published",
+    "statusArchived": "Archived",
+    "exportJson": "Export JSON",
+    "exportYaml": "Export YAML",
+    "exportError": "Failed to export form.",
+    "importTitle": "Import Form",
+    "importButton": "Import",
+    "importSuccess": "Form \"{{title}}\" imported.",
+    "importError": "Failed to import form.",
+    "importFilePlaceholder": "Drop a .json or .yaml file here, or click to select",
+    "importFileInvalid": "Please select a .json or .yaml file."
   },
   "footer": {
     "privacy": "Privacy Policy",

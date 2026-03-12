@@ -1,20 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ActionIcon,
   Badge,
   Button,
+  FileButton,
   Group,
   Modal,
+  Select,
   Stack,
   Table,
   Text,
   TextInput,
   Title,
   Textarea,
+  Tooltip,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Download, FileUp, Pencil, Plus, Trash2 } from 'lucide-react'
 import { AppLayout } from '@/components/layout'
 import { useToast } from '@/components/toast'
 import { useWorkspace } from '@/context/WorkspaceContext'
@@ -56,9 +59,22 @@ export function FormsPage() {
   const [newDescription, setNewDescription] = useState('')
   const [creating, setCreating] = useState(false)
 
+  // Edit modal
+  const [editTarget, setEditTarget] = useState<Form | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editStatus, setEditStatus] = useState<Form['status']>('draft')
+  const [editing, setEditing] = useState(false)
+
   // Delete modal
   const [deleteTarget, setDeleteTarget] = useState<Form | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Import modal
+  const [importOpened, { open: openImport, close: closeImport }] = useDisclosure(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importing, setImporting] = useState(false)
+  const importResetRef = useRef<() => void>(null)
 
   useEffect(() => {
     if (!workspace) return
@@ -69,6 +85,17 @@ export function FormsPage() {
       .catch(() => showToast('error', t('forms.loadError')))
       .finally(() => setLoading(false))
   }, [workspace, showToast, t])
+
+  function openEdit(form: Form) {
+    setEditTarget(form)
+    setEditTitle(form.title)
+    setEditDescription(form.description ?? '')
+    setEditStatus(form.status)
+  }
+
+  function closeEdit() {
+    setEditTarget(null)
+  }
 
   async function handleCreate() {
     if (!workspace || !newTitle.trim()) return
@@ -92,6 +119,30 @@ export function FormsPage() {
     }
   }
 
+  async function handleEdit() {
+    if (!workspace || !editTarget || !editTitle.trim()) return
+    setEditing(true)
+    try {
+      const res = await apiFetch(`/api/workspaces/${workspace.id}/forms/${editTarget.id}`, {
+        method: 'PATCH',
+        json: {
+          title: editTitle.trim(),
+          description: editDescription.trim() || null,
+          status: editStatus,
+        },
+      })
+      if (!res.ok) throw new Error()
+      const updated: Form = await res.json()
+      setForms((prev) => prev.map((f) => (f.id === updated.id ? updated : f)))
+      closeEdit()
+      showToast('success', t('forms.editSuccess', { title: updated.title }))
+    } catch {
+      showToast('error', t('forms.editError'))
+    } finally {
+      setEditing(false)
+    }
+  }
+
   async function handleDelete() {
     if (!workspace || !deleteTarget) return
     setDeleting(true)
@@ -110,13 +161,78 @@ export function FormsPage() {
     }
   }
 
+  async function handleExport(form: Form, format: 'json' | 'yaml') {
+    if (!workspace) return
+    try {
+      const res = await apiFetch(
+        `/api/workspaces/${workspace.id}/forms/${form.id}/export?format=${format}`,
+      )
+      if (!res.ok) throw new Error()
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${format === 'yaml' ? 'yaml' : 'json'}`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      showToast('error', t('forms.exportError'))
+    }
+  }
+
+  async function handleImport() {
+    if (!workspace || !importFile) return
+
+    const ext = importFile.name.split('.').pop()?.toLowerCase()
+    const format = ext === 'yaml' || ext === 'yml' ? 'yaml' : 'json'
+
+    if (!['json', 'yaml', 'yml'].includes(ext ?? '')) {
+      showToast('error', t('forms.importFileInvalid'))
+      return
+    }
+
+    setImporting(true)
+    try {
+      const content = await importFile.text()
+      const res = await apiFetch(`/api/workspaces/${workspace.id}/forms/import`, {
+        method: 'POST',
+        json: { content, format },
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error((err as { error?: string }).error ?? 'error')
+      }
+      const form: Form = await res.json()
+      setForms((prev) => [form, ...prev])
+      setImportFile(null)
+      importResetRef.current?.()
+      closeImport()
+      showToast('success', t('forms.importSuccess', { title: form.title }))
+    } catch {
+      showToast('error', t('forms.importError'))
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  const statusOptions: { value: Form['status']; label: string }[] = [
+    { value: 'draft', label: t('forms.statusDraft') },
+    { value: 'published', label: t('forms.statusPublished') },
+    { value: 'archived', label: t('forms.statusArchived') },
+  ]
+
   return (
     <AppLayout>
       <Group justify="space-between" mb="lg">
         <Title order={2}>{t('nav.forms')}</Title>
-        <Button leftSection={<Plus size={16} />} onClick={openCreate}>
-          {t('forms.create')}
-        </Button>
+        <Group gap="sm">
+          <Button variant="default" leftSection={<FileUp size={16} />} onClick={openImport}>
+            {t('forms.importButton')}
+          </Button>
+          <Button leftSection={<Plus size={16} />} onClick={openCreate}>
+            {t('forms.create')}
+          </Button>
+        </Group>
       </Group>
 
       {loading ? (
@@ -146,7 +262,9 @@ export function FormsPage() {
               <Table.Tr key={form.id}>
                 <Table.Td>{form.title}</Table.Td>
                 <Table.Td>
-                  <Badge color={STATUS_COLORS[form.status]}>{form.status}</Badge>
+                  <Badge color={STATUS_COLORS[form.status]}>
+                    {t(`forms.status${form.status.charAt(0).toUpperCase() + form.status.slice(1)}`)}
+                  </Badge>
                 </Table.Td>
                 <Table.Td>
                   {form.currentRevision ? `v${form.currentRevision.version}` : '—'}
@@ -154,7 +272,29 @@ export function FormsPage() {
                 <Table.Td>{new Date(form.createdAt).toLocaleDateString()}</Table.Td>
                 <Table.Td>
                   <Group gap={4} justify="flex-end">
-                    <ActionIcon variant="subtle" aria-label={t('common.edit')}>
+                    <Tooltip label={t('forms.exportJson')} withArrow>
+                      <ActionIcon
+                        variant="subtle"
+                        aria-label={t('forms.exportJson')}
+                        onClick={() => handleExport(form, 'json')}
+                      >
+                        <Download size={16} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label={t('forms.exportYaml')} withArrow>
+                      <ActionIcon
+                        variant="subtle"
+                        aria-label={t('forms.exportYaml')}
+                        onClick={() => handleExport(form, 'yaml')}
+                      >
+                        <Download size={16} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <ActionIcon
+                      variant="subtle"
+                      aria-label={t('common.edit')}
+                      onClick={() => openEdit(form)}
+                    >
                       <Pencil size={16} />
                     </ActionIcon>
                     <ActionIcon
@@ -207,6 +347,46 @@ export function FormsPage() {
         </Stack>
       </Modal>
 
+      {/* Edit modal */}
+      <Modal
+        opened={editTarget !== null}
+        onClose={closeEdit}
+        title={t('forms.editTitle')}
+        transitionProps={{ duration: 0 }}
+      >
+        <Stack gap="sm">
+          <TextInput
+            label={t('forms.title')}
+            placeholder={t('forms.titlePlaceholder')}
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.currentTarget.value)}
+            required
+            data-autofocus
+          />
+          <Textarea
+            label={t('forms.descriptionLabel')}
+            placeholder={t('forms.descriptionPlaceholder')}
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.currentTarget.value)}
+            rows={3}
+          />
+          <Select
+            label={t('forms.status')}
+            data={statusOptions}
+            value={editStatus}
+            onChange={(v) => setEditStatus((v as Form['status']) ?? 'draft')}
+          />
+          <Group justify="flex-end" mt="sm">
+            <Button variant="default" onClick={closeEdit}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleEdit} loading={editing} disabled={!editTitle.trim()}>
+              {t('common.save')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       {/* Delete confirmation modal */}
       <Modal
         opened={deleteTarget !== null}
@@ -223,6 +403,42 @@ export function FormsPage() {
             {t('common.delete')}
           </Button>
         </Group>
+      </Modal>
+
+      {/* Import modal */}
+      <Modal
+        opened={importOpened}
+        onClose={closeImport}
+        title={t('forms.importTitle')}
+        transitionProps={{ duration: 0 }}
+      >
+        <Stack gap="sm">
+          <FileButton resetRef={importResetRef} onChange={setImportFile} accept=".json,.yaml,.yml">
+            {(props) => (
+              <Button variant="default" fullWidth {...props}>
+                {importFile ? importFile.name : t('forms.importFilePlaceholder')}
+              </Button>
+            )}
+          </FileButton>
+          {importFile && (
+            <Text size="xs" c="dimmed">
+              {importFile.name} ({(importFile.size / 1024).toFixed(1)} KB)
+            </Text>
+          )}
+          <Group justify="flex-end" mt="sm">
+            <Button variant="default" onClick={closeImport}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              leftSection={<FileUp size={16} />}
+              onClick={handleImport}
+              loading={importing}
+              disabled={!importFile}
+            >
+              {t('forms.importButton')}
+            </Button>
+          </Group>
+        </Stack>
       </Modal>
     </AppLayout>
   )
