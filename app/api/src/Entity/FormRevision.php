@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\FormStatus;
 use App\Repository\FormRevisionRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -30,6 +31,21 @@ class FormRevision
     #[ORM\Column(type: Types::JSON)]
     #[Groups(['form:read', 'form:revision:read'])]
     private array $schema = [];
+
+    /** Snapshot of the form title at the time this revision was saved. */
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['form:read', 'form:revision:read'])]
+    private ?string $title = null;
+
+    /** Snapshot of the form description at the time this revision was saved. */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['form:revision:read'])]
+    private ?string $description = null;
+
+    /** Snapshot of the form status at the time this revision was saved. */
+    #[ORM\Column(length: 20, enumType: FormStatus::class, nullable: true)]
+    #[Groups(['form:revision:read'])]
+    private ?FormStatus $status = null;
 
     #[ORM\Column]
     #[Groups(['form:read', 'form:revision:read'])]
@@ -88,6 +104,42 @@ class FormRevision
     public function setVersion(int $version): static
     {
         $this->version = $version;
+
+        return $this;
+    }
+
+    public function getTitle(): ?string
+    {
+        return $this->title;
+    }
+
+    public function setTitle(?string $title): static
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): static
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    public function getStatus(): ?FormStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?FormStatus $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

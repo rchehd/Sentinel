@@ -151,7 +151,21 @@
     "importSuccess": "Форму \"{{title}}\" імпортовано.",
     "importError": "Не вдалося імпортувати форму.",
     "importFilePlaceholder": "Перетягніть .json або .yaml файл сюди, або натисніть для вибору",
-    "importFileInvalid": "Будь ласка, виберіть файл .json або .yaml."
+    "importFileInvalid": "Будь ласка, виберіть файл .json або .yaml.",
+    "selectAll": "Вибрати всі",
+    "selectedCount": "Вибрано: {{count}}",
+    "exportSelected": "Експортувати вибрані",
+    "bulkExportJson": "Експорт JSON",
+    "bulkExportYaml": "Експорт YAML",
+    "bulkExportError": "Не вдалося експортувати форми.",
+    "bulkImportSuccess": "Імпортовано {{count}} форм(и).",
+    "revisionsTitle": "Історія ревізій",
+    "revisionsEmpty": "Ще немає ревізій.",
+    "revisionsVersion": "Версія",
+    "revisionsDate": "Збережено",
+    "revisionsRestore": "Відновити",
+    "revisionsRestoreSuccess": "Відновлено до v{{version}}.",
+    "revisionsRestoreError": "Не вдалося відновити ревізію."
   },
   "footer": {
     "privacy": "Політика конфіденційності",

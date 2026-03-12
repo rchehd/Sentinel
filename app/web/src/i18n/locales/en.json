@@ -151,7 +151,21 @@
     "importSuccess": "Form \"{{title}}\" imported.",
     "importError": "Failed to import form.",
     "importFilePlaceholder": "Drop a .json or .yaml file here, or click to select",
-    "importFileInvalid": "Please select a .json or .yaml file."
+    "importFileInvalid": "Please select a .json or .yaml file.",
+    "selectAll": "Select all",
+    "selectedCount": "{{count}} selected",
+    "exportSelected": "Export selected",
+    "bulkExportJson": "Export as JSON",
+    "bulkExportYaml": "Export as YAML",
+    "bulkExportError": "Failed to export selected forms.",
+    "bulkImportSuccess": "{{count}} form(s) imported.",
+    "revisionsTitle": "Revision History",
+    "revisionsEmpty": "No revisions yet.",
+    "revisionsVersion": "Version",
+    "revisionsDate": "Saved at",
+    "revisionsRestore": "Restore",
+    "revisionsRestoreSuccess": "Restored to v{{version}}.",
+    "revisionsRestoreError": "Failed to restore revision."
   },
   "footer": {
     "privacy": "Privacy Policy",

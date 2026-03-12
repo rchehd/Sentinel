@@ -102,6 +102,7 @@ class FormController extends AbstractController
     public function update(
         string $workspaceId,
         string $formId,
+        #[CurrentUser] User $user,
         #[MapRequestPayload] UpdateFormRequest $dto,
     ): JsonResponse {
         $form = $this->findFormInWorkspace($workspaceId, $formId);
@@ -124,6 +125,11 @@ class FormController extends AbstractController
             $form->setStatus($dto->status);
         }
 
+        // Snapshot the updated metadata so this change is part of revision history
+        // and can be rolled back via the restore endpoint.
+        $revision = $this->createRevisionSnapshot($form, $user);
+        $this->em->persist($revision);
+        $form->setCurrentRevision($revision);
         $this->em->flush();
 
         return $this->json($form, context: ['groups' => ['form:read']]);
@@ -166,6 +172,9 @@ class FormController extends AbstractController
         $revision->setSchema($dto->schema);
         $revision->setVersion($this->formRevisionRepository->getNextVersion($form));
         $revision->setCreatedBy($user);
+        $revision->setTitle($form->getTitle());
+        $revision->setDescription($form->getDescription());
+        $revision->setStatus($form->getStatus());
 
         $this->em->persist($revision);
         $form->setCurrentRevision($revision);
@@ -308,6 +317,176 @@ class FormController extends AbstractController
      *
      * @return array<string, mixed>
      */
+    /**
+     * Restore the form to a specific revision.
+     *
+     * Updates the form's metadata to match the revision snapshot and sets it
+     * as the current revision. No new revision is created — the history is
+     * preserved intact and the pointer simply moves back.
+     */
+    #[Route('/{formId}/revisions/{revisionId}/restore', name: 'api_forms_revision_restore', methods: ['POST'])]
+    public function restoreRevision(string $workspaceId, string $formId, string $revisionId): JsonResponse
+    {
+        $form = $this->findFormInWorkspace($workspaceId, $formId);
+
+        if ($form instanceof JsonResponse) {
+            return $form;
+        }
+
+        $this->denyAccessUnlessGranted(FormVoter::EDIT, $form);
+
+        $revision = $this->formRevisionRepository->find($revisionId);
+
+        if (null === $revision || (string) $revision->getForm()?->getId() !== $formId) {
+            return $this->json(['error' => 'Revision not found.'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Restore metadata from the snapshot (fall back to current value when null,
+        // which happens for revisions created before metadata snapshotting was added).
+        if (null !== $revision->getTitle()) {
+            $form->setTitle($revision->getTitle());
+        }
+        if (null !== $revision->getDescription()) {
+            $form->setDescription($revision->getDescription());
+        }
+        if (null !== $revision->getStatus()) {
+            $form->setStatus($revision->getStatus());
+        }
+
+        $form->setCurrentRevision($revision);
+        $this->em->flush();
+
+        return $this->json($form, context: ['groups' => ['form:read']]);
+    }
+
+    /**
+     * Export multiple forms at once as a single combined JSON or YAML file.
+     *
+     * Accepts a JSON body with `ids` (array of form UUIDs) and `format`.
+     * Returns a bulk document: {sentinel_version, forms: [...]}.
+     */
+    #[Route('/export-bulk', name: 'api_forms_export_bulk', methods: ['POST'])]
+    public function exportBulk(string $workspaceId, Request $request): Response
+    {
+        $workspace = $this->workspaceRepository->find($workspaceId);
+
+        if (null === $workspace) {
+            return $this->json(['error' => 'Workspace not found.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $this->denyAccessUnlessGranted('workspace_view', $workspace);
+
+        try {
+            /** @var array{ids?: mixed, format?: mixed} $payload */
+            $payload = json_decode((string) $request->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return $this->json(['error' => 'Invalid JSON body.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $ids = $payload['ids'] ?? [];
+        $format = \is_string($payload['format'] ?? null) ? $payload['format'] : 'json';
+
+        if (!\is_array($ids) || 0 === \count($ids)) {
+            return $this->json(['error' => 'No form IDs provided.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!\in_array($format, ['json', 'yaml'], true)) {
+            return $this->json(['error' => 'Invalid format. Use json or yaml.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $forms = [];
+        foreach ($ids as $id) {
+            $form = $this->formRepository->find((string) $id);
+            if (null !== $form && (string) $form->getWorkspace()?->getId() === $workspaceId) {
+                $this->denyAccessUnlessGranted(FormVoter::VIEW, $form);
+                $forms[] = $this->buildExportPayload($form);
+            }
+        }
+
+        $data = ['sentinel_version' => '1.0', 'forms' => $forms];
+
+        if ('yaml' === $format) {
+            $content = Yaml::dump($data, 5, 2);
+            $mime = 'application/yaml';
+            $filename = 'forms-export.yaml';
+        } else {
+            $content = json_encode($data, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_UNICODE) ?: '{}';
+            $mime = 'application/json';
+            $filename = 'forms-export.json';
+        }
+
+        return new Response($content, Response::HTTP_OK, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Import multiple forms from a bulk export file.
+     *
+     * Accepts the same payload as the single import but expects the file to
+     * contain a `forms` array at the top level. Each entry is created as a
+     * new Form. Returns the array of created forms.
+     */
+    #[Route('/import-bulk', name: 'api_forms_import_bulk', methods: ['POST'])]
+    public function importBulk(
+        string $workspaceId,
+        #[CurrentUser] User $user,
+        #[MapRequestPayload] ImportFormRequest $dto,
+    ): JsonResponse {
+        $workspace = $this->workspaceRepository->find($workspaceId);
+
+        if (null === $workspace) {
+            return $this->json(['error' => 'Workspace not found.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $this->denyAccessUnlessGranted(WorkspaceVoter::FORM_CREATE, $workspace);
+
+        try {
+            $data = match ($dto->format) {
+                'yaml' => Yaml::parse($dto->content),
+                default => json_decode($dto->content, true, 512, \JSON_THROW_ON_ERROR),
+            };
+        } catch (ParseException|\JsonException $e) {
+            return $this->json(['error' => 'Invalid file content: ' . $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        if (!\is_array($data) || !isset($data['forms']) || !\is_array($data['forms'])) {
+            return $this->json(['error' => 'Missing required field: forms[].'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $created = [];
+        foreach ($data['forms'] as $entry) {
+            if (!\is_array($entry) || !isset($entry['title'])) {
+                continue;
+            }
+
+            $form = new Form();
+            $form->setWorkspace($workspace);
+            $form->setCreatedBy($user);
+            $form->setTitle((string) $entry['title']);
+
+            if (isset($entry['description']) && \is_string($entry['description'])) {
+                $form->setDescription($entry['description']);
+            }
+
+            if (isset($entry['status'])) {
+                $status = FormStatus::tryFrom((string) $entry['status']);
+                if (null !== $status) {
+                    $form->setStatus($status);
+                }
+            }
+
+            $this->em->persist($form);
+            $created[] = $form;
+        }
+
+        $this->em->flush();
+
+        return $this->json($created, Response::HTTP_CREATED, [], ['groups' => ['form:read']]);
+    }
+
+    /** @return array<string, mixed> */
     private function buildExportPayload(Form $form): array
     {
         return [
@@ -317,5 +496,25 @@ class FormController extends AbstractController
             'status' => $form->getStatus()->value,
             'stages' => [],
         ];
+    }
+
+    /**
+     * Create an immutable revision snapshot of the form's current state.
+     *
+     * Copies schema from the current revision (if any) so that every PATCH
+     * to metadata still preserves the full state in history.
+     */
+    private function createRevisionSnapshot(Form $form, User $user): FormRevision
+    {
+        $revision = new FormRevision();
+        $revision->setForm($form);
+        $revision->setTitle($form->getTitle());
+        $revision->setDescription($form->getDescription());
+        $revision->setStatus($form->getStatus());
+        $revision->setSchema($form->getCurrentRevision()?->getSchema() ?? []);
+        $revision->setVersion($this->formRevisionRepository->getNextVersion($form));
+        $revision->setCreatedBy($user);
+
+        return $revision;
     }
 }

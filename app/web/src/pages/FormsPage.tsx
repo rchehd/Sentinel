@@ -4,8 +4,10 @@ import {
   ActionIcon,
   Badge,
   Button,
+  Checkbox,
   FileButton,
   Group,
+  Menu,
   Modal,
   Select,
   Stack,
@@ -17,7 +19,7 @@ import {
   Tooltip,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { Download, FileUp, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, Clock, Download, FileUp, Pencil, Plus, Trash2 } from 'lucide-react'
 import { AppLayout } from '@/components/layout'
 import { useToast } from '@/components/toast'
 import { useWorkspace } from '@/context/WorkspaceContext'
@@ -26,6 +28,7 @@ import { apiFetch } from '@/lib/api'
 interface FormRevision {
   id: string
   version: number
+  title: string | null
   createdAt: string
 }
 
@@ -53,6 +56,9 @@ export function FormsPage() {
   const [forms, setForms] = useState<Form[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Row selection for bulk operations
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+
   // Create modal
   const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false)
   const [newTitle, setNewTitle] = useState('')
@@ -76,6 +82,12 @@ export function FormsPage() {
   const [importing, setImporting] = useState(false)
   const importResetRef = useRef<() => void>(null)
 
+  // Revision history modal
+  const [revisionForm, setRevisionForm] = useState<Form | null>(null)
+  const [revisions, setRevisions] = useState<FormRevision[]>([])
+  const [revisionsLoading, setRevisionsLoading] = useState(false)
+  const [restoringId, setRestoringId] = useState<string | null>(null)
+
   useEffect(() => {
     if (!workspace) return
     setLoading(true)
@@ -93,8 +105,38 @@ export function FormsPage() {
     setEditStatus(form.status)
   }
 
-  function closeEdit() {
-    setEditTarget(null)
+  async function openRevisions(form: Form) {
+    if (!workspace) return
+    setRevisionForm(form)
+    setRevisions([])
+    setRevisionsLoading(true)
+    try {
+      const res = await apiFetch(`/api/workspaces/${workspace.id}/forms/${form.id}/revisions`)
+      if (!res.ok) throw new Error()
+      setRevisions(await res.json())
+    } catch {
+      showToast('error', t('forms.loadError'))
+    } finally {
+      setRevisionsLoading(false)
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    setSelected((prev) =>
+      prev.size === forms.length ? new Set() : new Set(forms.map((f) => f.id)),
+    )
   }
 
   async function handleCreate() {
@@ -134,7 +176,7 @@ export function FormsPage() {
       if (!res.ok) throw new Error()
       const updated: Form = await res.json()
       setForms((prev) => prev.map((f) => (f.id === updated.id ? updated : f)))
-      closeEdit()
+      setEditTarget(null)
       showToast('success', t('forms.editSuccess', { title: updated.title }))
     } catch {
       showToast('error', t('forms.editError'))
@@ -152,6 +194,11 @@ export function FormsPage() {
       })
       if (!res.ok) throw new Error()
       setForms((prev) => prev.filter((f) => f.id !== deleteTarget.id))
+      setSelected((prev) => {
+        const next = new Set(prev)
+        next.delete(deleteTarget.id)
+        return next
+      })
       setDeleteTarget(null)
       showToast('success', t('forms.deleteSuccess', { title: deleteTarget.title }))
     } catch {
@@ -168,15 +215,26 @@ export function FormsPage() {
         `/api/workspaces/${workspace.id}/forms/${form.id}/export?format=${format}`,
       )
       if (!res.ok) throw new Error()
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${format === 'yaml' ? 'yaml' : 'json'}`
-      a.click()
-      URL.revokeObjectURL(url)
+      triggerDownload(
+        await res.blob(),
+        `${slugify(form.title)}.${format === 'yaml' ? 'yaml' : 'json'}`,
+      )
     } catch {
       showToast('error', t('forms.exportError'))
+    }
+  }
+
+  async function handleBulkExport(format: 'json' | 'yaml') {
+    if (!workspace || selected.size === 0) return
+    try {
+      const res = await apiFetch(`/api/workspaces/${workspace.id}/forms/export-bulk`, {
+        method: 'POST',
+        json: { ids: Array.from(selected), format },
+      })
+      if (!res.ok) throw new Error()
+      triggerDownload(await res.blob(), `forms-export.${format === 'yaml' ? 'yaml' : 'json'}`)
+    } catch {
+      showToast('error', t('forms.bulkExportError'))
     }
   }
 
@@ -184,34 +242,65 @@ export function FormsPage() {
     if (!workspace || !importFile) return
 
     const ext = importFile.name.split('.').pop()?.toLowerCase()
-    const format = ext === 'yaml' || ext === 'yml' ? 'yaml' : 'json'
-
     if (!['json', 'yaml', 'yml'].includes(ext ?? '')) {
       showToast('error', t('forms.importFileInvalid'))
       return
     }
+    const format = ext === 'yaml' || ext === 'yml' ? 'yaml' : 'json'
 
     setImporting(true)
     try {
       const content = await importFile.text()
-      const res = await apiFetch(`/api/workspaces/${workspace.id}/forms/import`, {
-        method: 'POST',
-        json: { content, format },
-      })
+
+      // Detect bulk vs single: bulk files have a top-level `forms` array
+      const isBulk = isBulkFile(content, format)
+      const endpoint = isBulk
+        ? `/api/workspaces/${workspace.id}/forms/import-bulk`
+        : `/api/workspaces/${workspace.id}/forms/import`
+
+      const res = await apiFetch(endpoint, { method: 'POST', json: { content, format } })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         throw new Error((err as { error?: string }).error ?? 'error')
       }
-      const form: Form = await res.json()
-      setForms((prev) => [form, ...prev])
+
+      if (isBulk) {
+        const created: Form[] = await res.json()
+        setForms((prev) => [...created, ...prev])
+        showToast('success', t('forms.bulkImportSuccess', { count: created.length }))
+      } else {
+        const form: Form = await res.json()
+        setForms((prev) => [form, ...prev])
+        showToast('success', t('forms.importSuccess', { title: form.title }))
+      }
+
       setImportFile(null)
       importResetRef.current?.()
       closeImport()
-      showToast('success', t('forms.importSuccess', { title: form.title }))
     } catch {
       showToast('error', t('forms.importError'))
     } finally {
       setImporting(false)
+    }
+  }
+
+  async function handleRestore(revision: FormRevision) {
+    if (!workspace || !revisionForm) return
+    setRestoringId(revision.id)
+    try {
+      const res = await apiFetch(
+        `/api/workspaces/${workspace.id}/forms/${revisionForm.id}/revisions/${revision.id}/restore`,
+        { method: 'POST' },
+      )
+      if (!res.ok) throw new Error()
+      const updated: Form = await res.json()
+      setForms((prev) => prev.map((f) => (f.id === updated.id ? updated : f)))
+      setRevisionForm(updated)
+      showToast('success', t('forms.revisionsRestoreSuccess', { version: revision.version }))
+    } catch {
+      showToast('error', t('forms.revisionsRestoreError'))
+    } finally {
+      setRestoringId(null)
     }
   }
 
@@ -220,6 +309,9 @@ export function FormsPage() {
     { value: 'published', label: t('forms.statusPublished') },
     { value: 'archived', label: t('forms.statusArchived') },
   ]
+
+  const allSelected = forms.length > 0 && selected.size === forms.length
+  const someSelected = selected.size > 0 && !allSelected
 
   return (
     <AppLayout>
@@ -234,6 +326,42 @@ export function FormsPage() {
           </Button>
         </Group>
       </Group>
+
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <Group
+          mb="sm"
+          p="sm"
+          style={{ background: 'var(--mantine-color-default)', borderRadius: 8 }}
+        >
+          <Text size="sm" fw={500}>
+            {t('forms.selectedCount', { count: selected.size })}
+          </Text>
+          <Menu shadow="md">
+            <Menu.Target>
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<Download size={14} />}
+                rightSection={<ChevronDown size={14} />}
+              >
+                {t('forms.exportSelected')}
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item onClick={() => handleBulkExport('json')}>
+                {t('forms.bulkExportJson')}
+              </Menu.Item>
+              <Menu.Item onClick={() => handleBulkExport('yaml')}>
+                {t('forms.bulkExportYaml')}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+          <Button size="xs" variant="subtle" color="gray" onClick={() => setSelected(new Set())}>
+            {t('common.cancel')}
+          </Button>
+        </Group>
+      )}
 
       {loading ? (
         <Text c="dimmed">{t('common.loading')}</Text>
@@ -250,6 +378,14 @@ export function FormsPage() {
         <Table striped highlightOnHover withTableBorder>
           <Table.Thead>
             <Table.Tr>
+              <Table.Th w={40}>
+                <Checkbox
+                  checked={allSelected}
+                  indeterminate={someSelected}
+                  onChange={toggleSelectAll}
+                  aria-label={t('forms.selectAll')}
+                />
+              </Table.Th>
               <Table.Th>{t('forms.title')}</Table.Th>
               <Table.Th>{t('forms.status')}</Table.Th>
               <Table.Th>{t('forms.revision')}</Table.Th>
@@ -259,7 +395,17 @@ export function FormsPage() {
           </Table.Thead>
           <Table.Tbody>
             {forms.map((form) => (
-              <Table.Tr key={form.id}>
+              <Table.Tr
+                key={form.id}
+                bg={selected.has(form.id) ? 'var(--mantine-color-blue-light)' : undefined}
+              >
+                <Table.Td>
+                  <Checkbox
+                    checked={selected.has(form.id)}
+                    onChange={() => toggleSelect(form.id)}
+                    aria-label={form.title}
+                  />
+                </Table.Td>
                 <Table.Td>{form.title}</Table.Td>
                 <Table.Td>
                   <Badge color={STATUS_COLORS[form.status]}>
@@ -288,6 +434,15 @@ export function FormsPage() {
                         onClick={() => handleExport(form, 'yaml')}
                       >
                         <Download size={16} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label={t('forms.revisionsTitle')} withArrow>
+                      <ActionIcon
+                        variant="subtle"
+                        aria-label={t('forms.revisionsTitle')}
+                        onClick={() => openRevisions(form)}
+                      >
+                        <Clock size={16} />
                       </ActionIcon>
                     </Tooltip>
                     <ActionIcon
@@ -350,7 +505,7 @@ export function FormsPage() {
       {/* Edit modal */}
       <Modal
         opened={editTarget !== null}
-        onClose={closeEdit}
+        onClose={() => setEditTarget(null)}
         title={t('forms.editTitle')}
         transitionProps={{ duration: 0 }}
       >
@@ -377,7 +532,7 @@ export function FormsPage() {
             onChange={(v) => setEditStatus((v as Form['status']) ?? 'draft')}
           />
           <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={closeEdit}>
+            <Button variant="default" onClick={() => setEditTarget(null)}>
               {t('common.cancel')}
             </Button>
             <Button onClick={handleEdit} loading={editing} disabled={!editTitle.trim()}>
@@ -440,6 +595,96 @@ export function FormsPage() {
           </Group>
         </Stack>
       </Modal>
+
+      {/* Revision history modal */}
+      <Modal
+        opened={revisionForm !== null}
+        onClose={() => setRevisionForm(null)}
+        title={t('forms.revisionsTitle')}
+        size="lg"
+        transitionProps={{ duration: 0 }}
+      >
+        {revisionsLoading ? (
+          <Text c="dimmed">{t('common.loading')}</Text>
+        ) : revisions.length === 0 ? (
+          <Text c="dimmed">{t('forms.revisionsEmpty')}</Text>
+        ) : (
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>{t('forms.revisionsVersion')}</Table.Th>
+                <Table.Th>{t('forms.title')}</Table.Th>
+                <Table.Th>{t('forms.revisionsDate')}</Table.Th>
+                <Table.Th />
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {revisions.map((rev) => {
+                const isCurrent = rev.id === revisionForm?.currentRevision?.id
+                return (
+                  <Table.Tr key={rev.id}>
+                    <Table.Td>
+                      <Group gap={6}>
+                        v{rev.version}
+                        {isCurrent && (
+                          <Badge size="xs" color="blue">
+                            current
+                          </Badge>
+                        )}
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>{rev.title ?? '—'}</Table.Td>
+                    <Table.Td>{new Date(rev.createdAt).toLocaleString()}</Table.Td>
+                    <Table.Td>
+                      <Button
+                        size="xs"
+                        variant="light"
+                        disabled={isCurrent}
+                        loading={restoringId === rev.id}
+                        onClick={() => handleRestore(rev)}
+                      >
+                        {t('forms.revisionsRestore')}
+                      </Button>
+                    </Table.Td>
+                  </Table.Tr>
+                )
+              })}
+            </Table.Tbody>
+          </Table>
+        )}
+      </Modal>
     </AppLayout>
   )
+}
+
+/** Slugify a title for use in a filename. */
+function slugify(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+}
+
+/** Trigger a file download from a Blob. */
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * Detect whether a file's content is a bulk export (has a top-level `forms`
+ * array) as opposed to a single-form export.
+ */
+function isBulkFile(content: string, format: 'json' | 'yaml'): boolean {
+  try {
+    if (format === 'json') {
+      const parsed = JSON.parse(content)
+      return Array.isArray(parsed?.forms)
+    }
+    // Lightweight YAML check: look for a `forms:` key at the root level
+    return /^forms\s*:/m.test(content)
+  } catch {
+    return false
+  }
 }

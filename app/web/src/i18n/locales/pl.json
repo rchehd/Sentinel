@@ -151,7 +151,21 @@
     "importSuccess": "Formularz \"{{title}}\" zaimportowany.",
     "importError": "Nie udało się zaimportować formularza.",
     "importFilePlaceholder": "Upuść plik .json lub .yaml tutaj lub kliknij, aby wybrać",
-    "importFileInvalid": "Wybierz plik .json lub .yaml."
+    "importFileInvalid": "Wybierz plik .json lub .yaml.",
+    "selectAll": "Zaznacz wszystkie",
+    "selectedCount": "Zaznaczono: {{count}}",
+    "exportSelected": "Eksportuj zaznaczone",
+    "bulkExportJson": "Eksport JSON",
+    "bulkExportYaml": "Eksport YAML",
+    "bulkExportError": "Nie udało się wyeksportować formularzy.",
+    "bulkImportSuccess": "Zaimportowano {{count}} formularz(e).",
+    "revisionsTitle": "Historia rewizji",
+    "revisionsEmpty": "Brak rewizji.",
+    "revisionsVersion": "Wersja",
+    "revisionsDate": "Zapisano",
+    "revisionsRestore": "Przywróć",
+    "revisionsRestoreSuccess": "Przywrócono do v{{version}}.",
+    "revisionsRestoreError": "Nie udało się przywrócić rewizji."
   },
   "footer": {
     "privacy": "Polityka prywatności",
