@@ -113,9 +113,30 @@
   },
   "nav": {
     "home": "Home",
+    "forms": "Forms",
     "dashboard": "Dashboard",
     "settings": "Settings",
     "profile": "Profile"
+  },
+  "forms": {
+    "create": "New Form",
+    "createFirst": "Create your first form",
+    "createTitle": "Create Form",
+    "createSuccess": "Form \"{{title}}\" created successfully.",
+    "createError": "Failed to create form.",
+    "deleteTitle": "Delete Form",
+    "deleteConfirm": "Are you sure you want to delete \"{{title}}\"? This cannot be undone.",
+    "deleteSuccess": "Form \"{{title}}\" deleted.",
+    "deleteError": "Failed to delete form.",
+    "loadError": "Failed to load forms.",
+    "empty": "No forms yet.",
+    "title": "Title",
+    "titlePlaceholder": "e.g. Customer Feedback",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Optional description",
+    "status": "Status",
+    "revision": "Revision",
+    "createdAt": "Created"
   },
   "footer": {
     "privacy": "Privacy Policy",

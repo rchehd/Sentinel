@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Dto\CreateFormRequest;
+use App\Dto\SaveSchemaRequest;
 use App\Dto\UpdateFormRequest;
 use App\Entity\Form;
+use App\Entity\FormRevision;
 use App\Entity\User;
 use App\Repository\FormRepository;
+use App\Repository\FormRevisionRepository;
 use App\Repository\WorkspaceRepository;
 use App\Security\FormVoter;
 use App\Security\WorkspaceVoter;
@@ -27,6 +30,7 @@ class FormController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly WorkspaceRepository $workspaceRepository,
         private readonly FormRepository $formRepository,
+        private readonly FormRevisionRepository $formRevisionRepository,
     ) {
     }
 
@@ -115,10 +119,6 @@ class FormController extends AbstractController
             $form->setStatus($dto->status);
         }
 
-        if (null !== $dto->schema) {
-            $form->setSchema($dto->schema);
-        }
-
         $this->em->flush();
 
         return $this->json($form, context: ['groups' => ['form:read']]);
@@ -139,6 +139,50 @@ class FormController extends AbstractController
         $this->em->flush();
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/{formId}/schema', name: 'api_forms_save_schema', methods: ['PUT'])]
+    public function saveSchema(
+        string $workspaceId,
+        string $formId,
+        #[CurrentUser] User $user,
+        #[MapRequestPayload] SaveSchemaRequest $dto,
+    ): JsonResponse {
+        $form = $this->findFormInWorkspace($workspaceId, $formId);
+
+        if ($form instanceof JsonResponse) {
+            return $form;
+        }
+
+        $this->denyAccessUnlessGranted(FormVoter::EDIT, $form);
+
+        $revision = new FormRevision();
+        $revision->setForm($form);
+        $revision->setSchema($dto->schema);
+        $revision->setVersion($this->formRevisionRepository->getNextVersion($form));
+        $revision->setCreatedBy($user);
+
+        $this->em->persist($revision);
+        $form->setCurrentRevision($revision);
+        $this->em->flush();
+
+        return $this->json($revision, Response::HTTP_CREATED, [], ['groups' => ['form:revision:read']]);
+    }
+
+    #[Route('/{formId}/revisions', name: 'api_forms_revisions', methods: ['GET'])]
+    public function revisions(string $workspaceId, string $formId): JsonResponse
+    {
+        $form = $this->findFormInWorkspace($workspaceId, $formId);
+
+        if ($form instanceof JsonResponse) {
+            return $form;
+        }
+
+        $this->denyAccessUnlessGranted(FormVoter::VIEW, $form);
+
+        $revisions = $this->formRevisionRepository->findByForm($form);
+
+        return $this->json($revisions, context: ['groups' => ['form:revision:read']]);
     }
 
     private function findFormInWorkspace(string $workspaceId, string $formId): Form|JsonResponse

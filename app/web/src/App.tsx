@@ -28,16 +28,14 @@ const ChangePasswordPage = lazy(() =>
 const AdminUsersPage = lazy(() =>
   import('@/pages/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
 )
-const FormsPage = lazy(() =>
-  import('@/pages/FormsPage').then((m) => ({ default: m.FormsPage })),
-)
+const FormsPage = lazy(() => import('@/pages/FormsPage').then((m) => ({ default: m.FormsPage })))
 
 // ---------------------------------------------------------------------------
 // Setup context — shared between the provider and route guards below
 // ---------------------------------------------------------------------------
 
 interface SetupState {
-  configured: boolean | null  // null = still checking
+  configured: boolean | null // null = still checking
   mode: AppMode | null
 }
 
@@ -71,7 +69,11 @@ function SetupProvider({ children }: { children: React.ReactNode }) {
     apiFetch('/api/setup/status')
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { configured: boolean; mode: AppMode } | null) => {
-        setState(data ? { configured: data.configured, mode: data.mode } : { configured: true, mode: null })
+        setState(
+          data
+            ? { configured: data.configured, mode: data.mode }
+            : { configured: true, mode: null },
+        )
         // Small delay so lazy chunks finish loading before the overlay fades out,
         // preventing a white-screen flash between the two loading phases.
         setTimeout(() => setLoaderVisible(false), 150)
@@ -128,34 +130,34 @@ function App() {
     <BrowserRouter>
       <SetupProvider>
         <AuthProvider>
-            <Routes>
-              <Route element={<SetupOnlyRoute />}>
-                <Route path="/setup/admin" element={<SetupPage />} />
-              </Route>
+          <Routes>
+            <Route element={<SetupOnlyRoute />}>
+              <Route path="/setup/admin" element={<SetupPage />} />
+            </Route>
 
-              <Route element={<ConfiguredRoute />}>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/register/check-email" element={<RegisterCheckEmailPage />} />
-                <Route path="/activate/:token" element={<ActivatePage />} />
+            <Route element={<ConfiguredRoute />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/register/check-email" element={<RegisterCheckEmailPage />} />
+              <Route path="/activate/:token" element={<ActivatePage />} />
 
-                <Route element={<AuthGuard />}>
-                  <Route element={<WorkspacesProvider />}>
-                    <Route path="/:slug" element={<WorkspaceLayout />}>
-                      <Route index element={<Navigate to="home" replace />} />
-                      <Route path="home" element={<HomePage />} />
-                      <Route path="dashboard" element={<DashboardPage />} />
-                      <Route path="forms" element={<FormsPage />} />
-                    </Route>
+              <Route element={<AuthGuard />}>
+                <Route element={<WorkspacesProvider />}>
+                  <Route path="/:slug" element={<WorkspaceLayout />}>
+                    <Route index element={<Navigate to="home" replace />} />
+                    <Route path="home" element={<HomePage />} />
+                    <Route path="dashboard" element={<DashboardPage />} />
+                    <Route path="forms" element={<FormsPage />} />
                   </Route>
-                  <Route path="/change-password" element={<ChangePasswordPage />} />
-                  <Route path="/admin/users" element={<AdminUsersPage />} />
                 </Route>
-
-                <Route path="*" element={<Navigate to="/login" replace />} />
+                <Route path="/change-password" element={<ChangePasswordPage />} />
+                <Route path="/admin/users" element={<AdminUsersPage />} />
               </Route>
-            </Routes>
-          </AuthProvider>
+
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
       </SetupProvider>
     </BrowserRouter>
   )

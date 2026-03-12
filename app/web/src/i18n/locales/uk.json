@@ -113,9 +113,30 @@
   },
   "nav": {
     "home": "Головна",
+    "forms": "Форми",
     "dashboard": "Панель управління",
     "settings": "Налаштування",
     "profile": "Профіль"
+  },
+  "forms": {
+    "create": "Нова форма",
+    "createFirst": "Створіть першу форму",
+    "createTitle": "Створити форму",
+    "createSuccess": "Форму \"{{title}}\" успішно створено.",
+    "createError": "Не вдалося створити форму.",
+    "deleteTitle": "Видалити форму",
+    "deleteConfirm": "Ви впевнені, що хочете видалити \"{{title}}\"? Це незворотньо.",
+    "deleteSuccess": "Форму \"{{title}}\" видалено.",
+    "deleteError": "Не вдалося видалити форму.",
+    "loadError": "Не вдалося завантажити форми.",
+    "empty": "Форм ще немає.",
+    "title": "Назва",
+    "titlePlaceholder": "напр. Зворотний зв'язок",
+    "descriptionLabel": "Опис",
+    "descriptionPlaceholder": "Необов'язковий опис",
+    "status": "Статус",
+    "revision": "Версія",
+    "createdAt": "Створено"
   },
   "footer": {
     "privacy": "Політика конфіденційності",

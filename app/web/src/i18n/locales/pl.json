@@ -113,9 +113,30 @@
   },
   "nav": {
     "home": "Strona główna",
+    "forms": "Formularze",
     "dashboard": "Panel",
     "settings": "Ustawienia",
     "profile": "Profil"
+  },
+  "forms": {
+    "create": "Nowy formularz",
+    "createFirst": "Utwórz pierwszy formularz",
+    "createTitle": "Utwórz formularz",
+    "createSuccess": "Formularz \"{{title}}\" został utworzony.",
+    "createError": "Nie udało się utworzyć formularza.",
+    "deleteTitle": "Usuń formularz",
+    "deleteConfirm": "Czy na pewno chcesz usunąć \"{{title}}\"? Tej operacji nie można cofnąć.",
+    "deleteSuccess": "Formularz \"{{title}}\" usunięty.",
+    "deleteError": "Nie udało się usunąć formularza.",
+    "loadError": "Nie udało się załadować formularzy.",
+    "empty": "Brak formularzy.",
+    "title": "Tytuł",
+    "titlePlaceholder": "np. Opinie klientów",
+    "descriptionLabel": "Opis",
+    "descriptionPlaceholder": "Opcjonalny opis",
+    "status": "Status",
+    "revision": "Wersja",
+    "createdAt": "Utworzono"
   },
   "footer": {
     "privacy": "Polityka prywatności",

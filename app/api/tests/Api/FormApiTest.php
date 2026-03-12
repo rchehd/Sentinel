@@ -59,7 +59,7 @@ class FormApiTest extends WebTestCase
         $this->assertArrayHasKey('id', $data[0]);
         $this->assertArrayHasKey('title', $data[0]);
         $this->assertArrayHasKey('status', $data[0]);
-        $this->assertArrayHasKey('schema', $data[0]);
+        $this->assertArrayHasKey('currentRevision', $data[0]);
         $this->assertArrayHasKey('createdAt', $data[0]);
     }
 
@@ -84,7 +84,7 @@ class FormApiTest extends WebTestCase
         $this->assertSame('Contact Form', $data['title']);
         $this->assertSame('A simple contact form.', $data['description']);
         $this->assertSame('draft', $data['status']);
-        $this->assertSame([], $data['schema']);
+        $this->assertNull($data['currentRevision']);
         $this->assertArrayNotHasKey('password', $data);
     }
 
@@ -179,14 +179,13 @@ class FormApiTest extends WebTestCase
         ], (string) json_encode([
             'title' => 'New Title',
             'status' => 'published',
-            'schema' => ['fields' => [['type' => 'text', 'name' => 'name']]],
         ]));
 
         $this->assertResponseIsSuccessful();
         $data = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertSame('New Title', $data['title']);
         $this->assertSame('published', $data['status']);
-        $this->assertSame([['type' => 'text', 'name' => 'name']], $data['schema']['fields']);
+        $this->assertNull($data['currentRevision']);
     }
 
     public function testViewerCannotUpdateForm(): void
@@ -247,6 +246,130 @@ class FormApiTest extends WebTestCase
         $client->request('DELETE', '/api/workspaces/' . $workspace->getId() . '/forms/' . $form->getId());
 
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+    }
+
+    public function testSaveSchemaCreatesRevision(): void
+    {
+        $client = static::createClient();
+        $owner = $this->createActiveUser(uniqid());
+        $workspace = $this->createWorkspaceForUser($owner, 'WS ' . uniqid());
+        $form = $this->createForm($workspace, $owner, 'My Form');
+        $client->loginUser($owner);
+
+        $schema = ['stages' => [['id' => 'stage-1', 'title' => 'Step 1', 'elements' => []]]];
+
+        $client->request('PUT', '/api/workspaces/' . $workspace->getId() . '/forms/' . $form->getId() . '/schema', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_ACCEPT' => 'application/json',
+        ], (string) json_encode(['schema' => $schema]));
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $data = json_decode((string) $client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('id', $data);
+        $this->assertSame(1, $data['version']);
+        $this->assertSame($schema, $data['schema']);
+        $this->assertArrayHasKey('createdAt', $data);
+    }
+
+    public function testSaveSchemaIncrementsVersion(): void
+    {
+        $client = static::createClient();
+        $owner = $this->createActiveUser(uniqid());
+        $workspace = $this->createWorkspaceForUser($owner, 'WS ' . uniqid());
+        $form = $this->createForm($workspace, $owner, 'My Form');
+        $client->loginUser($owner);
+
+        $url = '/api/workspaces/' . $workspace->getId() . '/forms/' . $form->getId() . '/schema';
+        $headers = ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'];
+
+        $client->request('PUT', $url, [], [], $headers, (string) json_encode(['schema' => ['stages' => []]]));
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $client->request('PUT', $url, [], [], $headers, (string) json_encode(['schema' => ['stages' => [['id' => 's2']]]]));
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $data = json_decode((string) $client->getResponse()->getContent(), true);
+        $this->assertSame(2, $data['version']);
+    }
+
+    public function testViewerCannotSaveSchema(): void
+    {
+        $client = static::createClient();
+        $owner = $this->createActiveUser('o-' . uniqid());
+        $viewer = $this->createActiveUser('v-' . uniqid());
+        $workspace = $this->createWorkspaceForUser($owner, 'WS ' . uniqid());
+        $form = $this->createForm($workspace, $owner, 'Protected');
+        $this->addMemberToWorkspace($workspace, $viewer, WorkspaceRole::Viewer);
+        $client->loginUser($viewer);
+
+        $client->request('PUT', '/api/workspaces/' . $workspace->getId() . '/forms/' . $form->getId() . '/schema', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], (string) json_encode(['schema' => []]));
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testEditorCanSaveSchema(): void
+    {
+        $client = static::createClient();
+        $owner = $this->createActiveUser('o-' . uniqid());
+        $editor = $this->createActiveUser('e-' . uniqid());
+        $workspace = $this->createWorkspaceForUser($owner, 'WS ' . uniqid());
+        $form = $this->createForm($workspace, $owner, 'Editor Form');
+        $this->addMemberToWorkspace($workspace, $editor, WorkspaceRole::Editor);
+        $client->loginUser($editor);
+
+        $client->request('PUT', '/api/workspaces/' . $workspace->getId() . '/forms/' . $form->getId() . '/schema', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], (string) json_encode(['schema' => ['stages' => []]]));
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+    }
+
+    public function testListRevisions(): void
+    {
+        $client = static::createClient();
+        $owner = $this->createActiveUser(uniqid());
+        $workspace = $this->createWorkspaceForUser($owner, 'WS ' . uniqid());
+        $form = $this->createForm($workspace, $owner, 'My Form');
+        $client->loginUser($owner);
+
+        $url = '/api/workspaces/' . $workspace->getId() . '/forms/' . $form->getId();
+        $headers = ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'];
+
+        $client->request('PUT', $url . '/schema', [], [], $headers, (string) json_encode(['schema' => ['stages' => []]]));
+        $client->request('PUT', $url . '/schema', [], [], $headers, (string) json_encode(['schema' => ['stages' => [['id' => 's1']]]]));
+
+        $client->request('GET', $url . '/revisions', [], [], ['HTTP_ACCEPT' => 'application/json']);
+
+        $this->assertResponseIsSuccessful();
+        $data = json_decode((string) $client->getResponse()->getContent(), true);
+        $this->assertCount(2, $data);
+        $this->assertSame(2, $data[0]['version']);
+        $this->assertSame(1, $data[1]['version']);
+    }
+
+    public function testFormResponseIncludesCurrentRevision(): void
+    {
+        $client = static::createClient();
+        $owner = $this->createActiveUser(uniqid());
+        $workspace = $this->createWorkspaceForUser($owner, 'WS ' . uniqid());
+        $form = $this->createForm($workspace, $owner, 'My Form');
+        $client->loginUser($owner);
+
+        $schema = ['stages' => [['id' => 'stage-1', 'title' => 'Intro', 'elements' => []]]];
+        $client->request('PUT', '/api/workspaces/' . $workspace->getId() . '/forms/' . $form->getId() . '/schema', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], (string) json_encode(['schema' => $schema]));
+
+        $client->request('GET', '/api/workspaces/' . $workspace->getId() . '/forms/' . $form->getId(), [], [], [
+            'HTTP_ACCEPT' => 'application/json',
+        ]);
+
+        $this->assertResponseIsSuccessful();
+        $data = json_decode((string) $client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('currentRevision', $data);
+        $this->assertSame(1, $data['currentRevision']['version']);
+        $this->assertSame($schema, $data['currentRevision']['schema']);
     }
 
     // -------------------------------------------------------------------------

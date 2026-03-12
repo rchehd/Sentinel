@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Entity;
 
 use App\Entity\Form;
+use App\Entity\FormRevision;
 use App\Entity\User;
 use App\Entity\Workspace;
 use App\Enum\FormStatus;
@@ -19,7 +20,7 @@ class FormTest extends TestCase
         $this->assertSame('', $form->getTitle());
         $this->assertNull($form->getDescription());
         $this->assertSame(FormStatus::Draft, $form->getStatus());
-        $this->assertSame([], $form->getSchema());
+        $this->assertNull($form->getCurrentRevision());
         $this->assertNull($form->getWorkspace());
         $this->assertNull($form->getCreatedBy());
         $this->assertNull($form->getId());
@@ -49,13 +50,13 @@ class FormTest extends TestCase
         $this->assertSame(FormStatus::Published, $form->getStatus());
     }
 
-    public function testSetSchema(): void
+    public function testSetCurrentRevision(): void
     {
-        $schema = ['fields' => [['type' => 'text', 'name' => 'email']]];
+        $revision = new FormRevision();
         $form = new Form();
-        $form->setSchema($schema);
+        $form->setCurrentRevision($revision);
 
-        $this->assertSame($schema, $form->getSchema());
+        $this->assertSame($revision, $form->getCurrentRevision());
     }
 
     public function testSetWorkspace(): void

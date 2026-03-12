@@ -6,6 +6,8 @@ namespace App\Entity;
 
 use App\Enum\FormStatus;
 use App\Repository\FormRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -50,10 +52,20 @@ class Form
     #[Groups(['form:read', 'form:write'])]
     private FormStatus $status = FormStatus::Draft;
 
-    /** @var array<mixed> */
-    #[ORM\Column(type: Types::JSON)]
-    #[Groups(['form:read', 'form:write'])]
-    private array $schema = [];
+    #[ORM\ManyToOne(targetEntity: FormRevision::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    #[Groups(['form:read'])]
+    private ?FormRevision $currentRevision = null;
+
+    /** @var Collection<int, FormRevision> */
+    #[ORM\OneToMany(targetEntity: FormRevision::class, mappedBy: 'form', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['version' => 'DESC'])]
+    private Collection $revisions;
+
+    public function __construct()
+    {
+        $this->revisions = new ArrayCollection();
+    }
 
     public function getId(): ?Uuid
     {
@@ -120,17 +132,21 @@ class Form
         return $this;
     }
 
-    /** @return array<mixed> */
-    public function getSchema(): array
+    public function getCurrentRevision(): ?FormRevision
     {
-        return $this->schema;
+        return $this->currentRevision;
     }
 
-    /** @param array<mixed> $schema */
-    public function setSchema(array $schema): static
+    public function setCurrentRevision(?FormRevision $revision): static
     {
-        $this->schema = $schema;
+        $this->currentRevision = $revision;
 
         return $this;
+    }
+
+    /** @return Collection<int, FormRevision> */
+    public function getRevisions(): Collection
+    {
+        return $this->revisions;
     }
 }
