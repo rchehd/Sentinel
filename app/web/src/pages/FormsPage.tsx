@@ -78,9 +78,13 @@ export function FormsPage() {
 
   // Import modal
   const [importOpened, { open: openImport, close: closeImport }] = useDisclosure(false)
+  const [importFormat, setImportFormat] = useState<'json' | 'yaml'>('json')
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
   const importResetRef = useRef<() => void>(null)
+
+  // Export format modal (single form) — kept for future modal variant if needed
+  // Currently handled inline via Menu in the table row
 
   // Revision history modal
   const [revisionForm, setRevisionForm] = useState<Form | null>(null)
@@ -215,10 +219,7 @@ export function FormsPage() {
         `/api/workspaces/${workspace.id}/forms/${form.id}/export?format=${format}`,
       )
       if (!res.ok) throw new Error()
-      triggerDownload(
-        await res.blob(),
-        `${slugify(form.title)}.${format === 'yaml' ? 'yaml' : 'json'}`,
-      )
+      triggerDownload(await res.blob(), `${slugify(form.title)}.${format}`)
     } catch {
       showToast('error', t('forms.exportError'))
     }
@@ -232,7 +233,7 @@ export function FormsPage() {
         json: { ids: Array.from(selected), format },
       })
       if (!res.ok) throw new Error()
-      triggerDownload(await res.blob(), `forms-export.${format === 'yaml' ? 'yaml' : 'json'}`)
+      triggerDownload(await res.blob(), `forms-export.${format}`)
     } catch {
       showToast('error', t('forms.bulkExportError'))
     }
@@ -241,24 +242,31 @@ export function FormsPage() {
   async function handleImport() {
     if (!workspace || !importFile) return
 
-    const ext = importFile.name.split('.').pop()?.toLowerCase()
-    if (!['json', 'yaml', 'yml'].includes(ext ?? '')) {
-      showToast('error', t('forms.importFileInvalid'))
-      return
-    }
-    const format = ext === 'yaml' || ext === 'yml' ? 'yaml' : 'json'
-
     setImporting(true)
     try {
       const content = await importFile.text()
 
+      // Validate that the file parses successfully before sending
+      try {
+        if (importFormat === 'json') {
+          JSON.parse(content)
+        }
+        // YAML parsing validation happens server-side (no bundled YAML parser)
+      } catch {
+        showToast('error', t('forms.importFileInvalid'))
+        return
+      }
+
       // Detect bulk vs single: bulk files have a top-level `forms` array
-      const isBulk = isBulkFile(content, format)
+      const isBulk = isBulkFile(content, importFormat)
       const endpoint = isBulk
         ? `/api/workspaces/${workspace.id}/forms/import-bulk`
         : `/api/workspaces/${workspace.id}/forms/import`
 
-      const res = await apiFetch(endpoint, { method: 'POST', json: { content, format } })
+      const res = await apiFetch(endpoint, {
+        method: 'POST',
+        json: { content, format: importFormat },
+      })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         throw new Error((err as { error?: string }).error ?? 'error')
@@ -418,24 +426,24 @@ export function FormsPage() {
                 <Table.Td>{new Date(form.createdAt).toLocaleDateString()}</Table.Td>
                 <Table.Td>
                   <Group gap={4} justify="flex-end">
-                    <Tooltip label={t('forms.exportJson')} withArrow>
-                      <ActionIcon
-                        variant="subtle"
-                        aria-label={t('forms.exportJson')}
-                        onClick={() => handleExport(form, 'json')}
-                      >
-                        <Download size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label={t('forms.exportYaml')} withArrow>
-                      <ActionIcon
-                        variant="subtle"
-                        aria-label={t('forms.exportYaml')}
-                        onClick={() => handleExport(form, 'yaml')}
-                      >
-                        <Download size={16} />
-                      </ActionIcon>
-                    </Tooltip>
+                    <Menu withinPortal position="bottom-end" shadow="sm">
+                      <Tooltip label={t('forms.exportButton')} withArrow>
+                        <Menu.Target>
+                          <ActionIcon variant="subtle" aria-label={t('forms.exportButton')}>
+                            <Download size={16} />
+                          </ActionIcon>
+                        </Menu.Target>
+                      </Tooltip>
+                      <Menu.Dropdown>
+                        <Menu.Label>{t('forms.exportFormat')}</Menu.Label>
+                        <Menu.Item onClick={() => handleExport(form, 'json')}>
+                          {t('forms.exportJson')}
+                        </Menu.Item>
+                        <Menu.Item onClick={() => handleExport(form, 'yaml')}>
+                          {t('forms.exportYaml')}
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
                     <Tooltip label={t('forms.revisionsTitle')} withArrow>
                       <ActionIcon
                         variant="subtle"
@@ -563,12 +571,34 @@ export function FormsPage() {
       {/* Import modal */}
       <Modal
         opened={importOpened}
-        onClose={closeImport}
+        onClose={() => {
+          closeImport()
+          setImportFile(null)
+          importResetRef.current?.()
+        }}
         title={t('forms.importTitle')}
         transitionProps={{ duration: 0 }}
       >
         <Stack gap="sm">
-          <FileButton resetRef={importResetRef} onChange={setImportFile} accept=".json,.yaml,.yml">
+          <Select
+            label={t('forms.importFormatLabel')}
+            data={[
+              { value: 'json', label: 'JSON (.json)' },
+              { value: 'yaml', label: 'YAML (.yaml / .yml)' },
+            ]}
+            value={importFormat}
+            onChange={(v) => {
+              setImportFormat((v as 'json' | 'yaml') ?? 'json')
+              // Reset file when format changes to avoid type mismatch
+              setImportFile(null)
+              importResetRef.current?.()
+            }}
+          />
+          <FileButton
+            resetRef={importResetRef}
+            onChange={setImportFile}
+            accept={importFormat === 'yaml' ? '.yaml,.yml' : '.json'}
+          >
             {(props) => (
               <Button variant="default" fullWidth {...props}>
                 {importFile ? importFile.name : t('forms.importFilePlaceholder')}
@@ -581,7 +611,14 @@ export function FormsPage() {
             </Text>
           )}
           <Group justify="flex-end" mt="sm">
-            <Button variant="default" onClick={closeImport}>
+            <Button
+              variant="default"
+              onClick={() => {
+                closeImport()
+                setImportFile(null)
+                importResetRef.current?.()
+              }}
+            >
               {t('common.cancel')}
             </Button>
             <Button

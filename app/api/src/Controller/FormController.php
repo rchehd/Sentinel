@@ -17,6 +17,8 @@ use App\Repository\FormRevisionRepository;
 use App\Repository\WorkspaceRepository;
 use App\Security\FormVoter;
 use App\Security\WorkspaceVoter;
+use App\Service\Form\Export\FormExportRegistry;
+use App\Service\Form\Import\FormImportRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,8 +27,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
-use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
 
 #[Route('/api/workspaces/{workspaceId}/forms')]
 class FormController extends AbstractController
@@ -36,6 +36,8 @@ class FormController extends AbstractController
         private readonly WorkspaceRepository $workspaceRepository,
         private readonly FormRepository $formRepository,
         private readonly FormRevisionRepository $formRevisionRepository,
+        private readonly FormExportRegistry $exportRegistry,
+        private readonly FormImportRegistry $importRegistry,
     ) {
     }
 
@@ -196,7 +198,7 @@ class FormController extends AbstractController
     }
 
     /**
-     * Export a form as a JSON or YAML file download.
+     * Export a single form as a JSON or YAML file download.
      *
      * Returns a structured document suitable for re-import on any instance.
      * The `stages` key is empty until the form editor is implemented, but its
@@ -215,26 +217,19 @@ class FormController extends AbstractController
 
         $format = $request->query->getString('format', 'json');
 
-        if (!\in_array($format, ['json', 'yaml'], true)) {
-            return $this->json(['error' => 'Invalid format. Use json or yaml.'], Response::HTTP_BAD_REQUEST);
+        if (!$this->exportRegistry->supports($format)) {
+            return $this->json(
+                ['error' => \sprintf('Unsupported format "%s". Supported: %s.', $format, implode(', ', $this->exportRegistry->getSupportedFormats()))],
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
-        $data = $this->buildExportPayload($form);
+        $exporter = $this->exportRegistry->get($format);
         $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($form->getTitle())) ?: 'form';
 
-        if ('yaml' === $format) {
-            $body = Yaml::dump($data, 4, 2);
-            $mime = 'application/yaml';
-            $filename = $slug . '.yaml';
-        } else {
-            $body = json_encode($data, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_UNICODE) ?: '{}';
-            $mime = 'application/json';
-            $filename = $slug . '.json';
-        }
-
-        return new Response($body, Response::HTTP_OK, [
-            'Content-Type' => $mime,
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        return new Response($exporter->encode($this->buildExportPayload($form)), Response::HTTP_OK, [
+            'Content-Type' => $exporter->getContentType(),
+            'Content-Disposition' => 'attachment; filename="' . $slug . '.' . $exporter->getFileExtension() . '"',
         ]);
     }
 
@@ -259,35 +254,24 @@ class FormController extends AbstractController
 
         $this->denyAccessUnlessGranted(WorkspaceVoter::FORM_CREATE, $workspace);
 
+        if (!$this->importRegistry->supports($dto->format)) {
+            return $this->json(
+                ['error' => \sprintf('Unsupported format "%s". Supported: %s.', $dto->format, implode(', ', $this->importRegistry->getSupportedFormats()))],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
         try {
-            $data = match ($dto->format) {
-                'yaml' => Yaml::parse($dto->content),
-                default => json_decode($dto->content, true, 512, \JSON_THROW_ON_ERROR),
-            };
-        } catch (ParseException|\JsonException $e) {
+            $data = $this->importRegistry->get($dto->format)->decode($dto->content);
+        } catch (\RuntimeException $e) {
             return $this->json(['error' => 'Invalid file content: ' . $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        if (!\is_array($data) || !isset($data['title'])) {
+        if (!isset($data['title']) || !\is_string($data['title'])) {
             return $this->json(['error' => 'Missing required field: title.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $form = new Form();
-        $form->setWorkspace($workspace);
-        $form->setCreatedBy($user);
-        $form->setTitle((string) $data['title']);
-
-        if (isset($data['description']) && \is_string($data['description'])) {
-            $form->setDescription($data['description']);
-        }
-
-        if (isset($data['status'])) {
-            $status = FormStatus::tryFrom((string) $data['status']);
-            if (null !== $status) {
-                $form->setStatus($status);
-            }
-        }
-
+        $form = $this->hydrateFormFromData($data, $workspace, $user);
         $this->em->persist($form);
         $this->em->flush();
 
@@ -386,8 +370,11 @@ class FormController extends AbstractController
             return $this->json(['error' => 'No form IDs provided.'], Response::HTTP_BAD_REQUEST);
         }
 
-        if (!\in_array($format, ['json', 'yaml'], true)) {
-            return $this->json(['error' => 'Invalid format. Use json or yaml.'], Response::HTTP_BAD_REQUEST);
+        if (!$this->exportRegistry->supports($format)) {
+            return $this->json(
+                ['error' => \sprintf('Unsupported format "%s". Supported: %s.', $format, implode(', ', $this->exportRegistry->getSupportedFormats()))],
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
         $forms = [];
@@ -399,21 +386,12 @@ class FormController extends AbstractController
             }
         }
 
+        $exporter = $this->exportRegistry->get($format);
         $data = ['sentinel_version' => '1.0', 'forms' => $forms];
 
-        if ('yaml' === $format) {
-            $content = Yaml::dump($data, 5, 2);
-            $mime = 'application/yaml';
-            $filename = 'forms-export.yaml';
-        } else {
-            $content = json_encode($data, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_UNICODE) ?: '{}';
-            $mime = 'application/json';
-            $filename = 'forms-export.json';
-        }
-
-        return new Response($content, Response::HTTP_OK, [
-            'Content-Type' => $mime,
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        return new Response($exporter->encode($data), Response::HTTP_OK, [
+            'Content-Type' => $exporter->getContentType(),
+            'Content-Disposition' => 'attachment; filename="forms-export.' . $exporter->getFileExtension() . '"',
         ]);
     }
 
@@ -438,41 +416,30 @@ class FormController extends AbstractController
 
         $this->denyAccessUnlessGranted(WorkspaceVoter::FORM_CREATE, $workspace);
 
+        if (!$this->importRegistry->supports($dto->format)) {
+            return $this->json(
+                ['error' => \sprintf('Unsupported format "%s". Supported: %s.', $dto->format, implode(', ', $this->importRegistry->getSupportedFormats()))],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
         try {
-            $data = match ($dto->format) {
-                'yaml' => Yaml::parse($dto->content),
-                default => json_decode($dto->content, true, 512, \JSON_THROW_ON_ERROR),
-            };
-        } catch (ParseException|\JsonException $e) {
+            $data = $this->importRegistry->get($dto->format)->decode($dto->content);
+        } catch (\RuntimeException $e) {
             return $this->json(['error' => 'Invalid file content: ' . $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        if (!\is_array($data) || !isset($data['forms']) || !\is_array($data['forms'])) {
+        if (!isset($data['forms']) || !\is_array($data['forms'])) {
             return $this->json(['error' => 'Missing required field: forms[].'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $created = [];
         foreach ($data['forms'] as $entry) {
-            if (!\is_array($entry) || !isset($entry['title'])) {
+            if (!\is_array($entry) || !isset($entry['title']) || !\is_string($entry['title'])) {
                 continue;
             }
 
-            $form = new Form();
-            $form->setWorkspace($workspace);
-            $form->setCreatedBy($user);
-            $form->setTitle((string) $entry['title']);
-
-            if (isset($entry['description']) && \is_string($entry['description'])) {
-                $form->setDescription($entry['description']);
-            }
-
-            if (isset($entry['status'])) {
-                $status = FormStatus::tryFrom((string) $entry['status']);
-                if (null !== $status) {
-                    $form->setStatus($status);
-                }
-            }
-
+            $form = $this->hydrateFormFromData($entry, $workspace, $user);
             $this->em->persist($form);
             $created[] = $form;
         }
@@ -492,5 +459,31 @@ class FormController extends AbstractController
             'status' => $form->getStatus()->value,
             'stages' => [],
         ];
+    }
+
+    /**
+     * Hydrate a new Form entity from a parsed import data array.
+     *
+     * @param array<string, mixed> $data
+     */
+    private function hydrateFormFromData(array $data, \App\Entity\Workspace $workspace, User $user): Form
+    {
+        $form = new Form();
+        $form->setWorkspace($workspace);
+        $form->setCreatedBy($user);
+        $form->setTitle((string) $data['title']);
+
+        if (isset($data['description']) && \is_string($data['description'])) {
+            $form->setDescription($data['description']);
+        }
+
+        if (isset($data['status'])) {
+            $status = FormStatus::tryFrom((string) $data['status']);
+            if (null !== $status) {
+                $form->setStatus($status);
+            }
+        }
+
+        return $form;
     }
 }
