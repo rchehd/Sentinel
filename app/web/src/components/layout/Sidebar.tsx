@@ -15,6 +15,7 @@ export function Sidebar() {
 
   const links = [
     { label: t('nav.home'), href: `${base}/home` },
+    { label: t('nav.forms'), href: `${base}/forms` },
     { label: t('nav.dashboard'), href: `${base}/dashboard` },
   ]
 

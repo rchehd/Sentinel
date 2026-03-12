@@ -7,6 +7,7 @@ import { HomePage } from './pages/HomePage';
 import { ChangePasswordPage } from './pages/ChangePasswordPage';
 import { AdminUsersPage } from './pages/AdminUsersPage';
 import { SetupAdminPage } from './pages/SetupAdminPage';
+import { FormsPage } from './pages/FormsPage';
 
 export const test = base.extend<{
   loginPage: LoginPage;
@@ -17,6 +18,7 @@ export const test = base.extend<{
   changePasswordPage: ChangePasswordPage;
   adminUsersPage: AdminUsersPage;
   setupAdminPage: SetupAdminPage;
+  formsPage: FormsPage;
 }>({
   loginPage: async ({ page }, use) => use(new LoginPage(page)),
   registerPage: async ({ page }, use) => use(new RegisterPage(page)),
@@ -26,6 +28,8 @@ export const test = base.extend<{
   changePasswordPage: async ({ page }, use) => use(new ChangePasswordPage(page)),
   adminUsersPage: async ({ page }, use) => use(new AdminUsersPage(page)),
   setupAdminPage: async ({ page }, use) => use(new SetupAdminPage(page)),
+  formsPage: async ({ page }, use) => use(new FormsPage(page)),
 });
 
 export const { Given, When, Then } = createBdd(test);
+

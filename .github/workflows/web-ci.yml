@@ -85,3 +85,25 @@ jobs:
       - name: Type check
         run: npx tsc -b
         working-directory: app/web
+
+  vitest:
+    name: Vitest
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: app/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: app/web
+
+      - name: Run Vitest
+        run: npx vitest run
+        working-directory: app/web
