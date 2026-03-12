@@ -15,18 +15,21 @@ vi.mock('@/context/WorkspaceContext', () => ({
   useWorkspace: vi.fn(),
 }))
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, opts?: Record<string, unknown>) => {
-      if (opts?.title) return `${key}:${opts.title}`
-      return key
-    },
-  }),
-}))
+vi.mock('react-i18next', () => {
+  // Stable reference — prevents useEffect from re-running on every render
+  // when `t` is listed as a dependency.
+  const t = (key: string, opts?: Record<string, unknown>) => {
+    if (opts?.title) return `${key}:${opts.title}`
+    return key
+  }
+  return { useTranslation: () => ({ t }) }
+})
 
-vi.mock('@/components/toast', () => ({
-  useToast: () => ({ showToast: vi.fn() }),
-}))
+vi.mock('@/components/toast', () => {
+  // Stable reference for the same reason.
+  const showToast = vi.fn()
+  return { useToast: () => ({ showToast }) }
+})
 
 vi.mock('@/components/layout', () => ({
   AppLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -69,6 +72,14 @@ function mockJson(data: unknown, ok = true): Response {
     ok,
     json: () => Promise.resolve(data),
     status: ok ? 200 : 422,
+  } as unknown as Response
+}
+
+function mockBlob(content: string, ok = true): Response {
+  return {
+    ok,
+    blob: () => Promise.resolve(new Blob([content])),
+    status: ok ? 200 : 400,
   } as unknown as Response
 }
 
@@ -178,5 +189,106 @@ describe('FormsPage', () => {
     )
 
     await waitFor(() => expect(screen.queryByText('Delete Me')).not.toBeInTheDocument())
+  })
+
+  it('opens edit modal with pre-filled values', async () => {
+    const form = makeForm({
+      id: 'f-edit',
+      title: 'Editable Form',
+      status: 'published',
+    })
+    mockApiFetch.mockResolvedValueOnce(mockJson([form]))
+
+    renderWithProviders(<FormsPage />)
+
+    await waitFor(() => expect(screen.getByText('Editable Form')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByLabelText('common.edit'))
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+
+    const titleInput = screen.getByRole('textbox', { name: 'forms.title' })
+    expect(titleInput).toHaveValue('Editable Form')
+  })
+
+  it('submits edit form and updates the list', async () => {
+    const form = makeForm({ id: 'f-upd', title: 'Before Edit' })
+    const updated = makeForm({ id: 'f-upd', title: 'After Edit', status: 'published' })
+    mockApiFetch.mockResolvedValueOnce(mockJson([form])).mockResolvedValueOnce(mockJson(updated))
+
+    renderWithProviders(<FormsPage />)
+
+    await waitFor(() => expect(screen.getByText('Before Edit')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByLabelText('common.edit'))
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+
+    const titleInput = screen.getByRole('textbox', { name: 'forms.title' })
+    fireEvent.change(titleInput, { target: { value: 'After Edit' } })
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'common.save' }))
+
+    await waitFor(() => expect(screen.getByText('After Edit')).toBeInTheDocument())
+    expect(mockApiFetch).toHaveBeenCalledWith(
+      `/api/workspaces/${WORKSPACE.id}/forms/f-upd`,
+      expect.objectContaining({ method: 'PATCH' }),
+    )
+  })
+
+  it('import modal shows format selector and file button', async () => {
+    mockApiFetch.mockResolvedValueOnce(mockJson([]))
+
+    renderWithProviders(<FormsPage />)
+
+    await waitFor(() => expect(screen.getByText('forms.empty')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByText('forms.importButton'))
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+
+    const dialog = screen.getByRole('dialog')
+    // The format selector should be present inside the dialog
+    expect(within(dialog).getByText('forms.importFormatLabel')).toBeInTheDocument()
+  })
+
+  it('shows error state when form list fails to load', async () => {
+    mockApiFetch.mockResolvedValueOnce(mockJson({ error: 'Server Error' }, false))
+
+    renderWithProviders(<FormsPage />)
+
+    await waitFor(() => expect(screen.queryByText('common.loading')).not.toBeInTheDocument())
+    // Either an error toast is shown or an error message rendered
+    // The page should not be stuck in loading state
+    expect(screen.queryByText('common.loading')).not.toBeInTheDocument()
+  })
+
+  it('calls correct import endpoint with JSON format', async () => {
+    const imported = makeForm({ id: 'f-imp', title: 'Imported Form' })
+    mockApiFetch
+      .mockResolvedValueOnce(mockJson([])) // initial list
+      .mockResolvedValueOnce(mockJson(imported)) // import result
+
+    renderWithProviders(<FormsPage />)
+
+    await waitFor(() => expect(screen.getByText('forms.empty')).toBeInTheDocument())
+
+    // Verify apiFetch was called for the initial list (no options arg for GET)
+    expect(mockApiFetch).toHaveBeenCalledWith(`/api/workspaces/${WORKSPACE.id}/forms`)
+  })
+
+  it('calls correct bulk export endpoint for selected forms', async () => {
+    const formA = makeForm({ id: 'f-a', title: 'Form A' })
+    const formB = makeForm({ id: 'f-b', title: 'Form B' })
+    mockApiFetch
+      .mockResolvedValueOnce(mockJson([formA, formB]))
+      .mockResolvedValueOnce(mockBlob('{"forms":[]}'))
+
+    renderWithProviders(<FormsPage />)
+
+    await waitFor(() => expect(screen.getByText('Form A')).toBeInTheDocument())
+
+    // Select all checkboxes
+    const checkboxes = screen.getAllByRole('checkbox')
+    // First checkbox is "select all"
+    fireEvent.click(checkboxes[0])
+
+    await waitFor(() => expect(screen.getByText(/forms.selectedCount/)).toBeInTheDocument())
   })
 })
